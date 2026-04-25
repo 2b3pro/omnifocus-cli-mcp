@@ -1,3 +1,8 @@
 node_modules/
 dist/
 *.tsbuildinfo
+
+# Legacy snapshot (keep code, ignore install artifacts)
+legacy/node_modules/
+legacy/.claude/
+legacy/.references/
