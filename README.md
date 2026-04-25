@@ -1,11 +1,11 @@
-# OmniFocus MCP
+# OmniFocus CLI-MCP
 
 [![npm version](https://img.shields.io/npm/v/omnifocus-mcp-server.svg)](https://www.npmjs.com/package/omnifocus-mcp-server)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 > ✔️ Turn prompts into projects.
 
-Feature-complete [Model Context Protocol](https://modelcontextprotocol.io/) server for [OmniFocus](https://www.omnigroup.com/omnifocus). Full read/write access to tasks, projects, folders, tags, and perspectives — 50 tools, 2 resources, and 3 prompts.
+Feature-complete [Model Context Protocol](https://modelcontextprotocol.io/) server and powerful CLI for [OmniFocus](https://www.omnigroup.com/omnifocus). Full read/write access to tasks, projects, folders, tags, and perspectives — 50 tools, 2 resources, and 3 prompts.
 
 Uses [Omni Automation](https://omni-automation.com/) (OmniJS) under the hood, executing scripts via JXA and `osascript`. This is why macOS is required.
 
@@ -17,12 +17,70 @@ Uses [Omni Automation](https://omni-automation.com/) (OmniJS) under the hood, ex
 - [Install](#install)
 - [Requirements](#requirements)
 - [Security](#security)
+- [CLI](#cli)
 - [Tools](#tools)
 - [Resources](#resources)
 - [Prompts](#prompts)
 - [Troubleshooting](#troubleshooting)
 - [Development](#development)
+- [Attribution](#attribution)
 - [License](#license)
+
+## CLI
+
+The package includes a powerful CLI tool `of` for direct interaction with OmniFocus from your terminal.
+
+### Installation
+
+If you've installed the package globally, the `of` command should be available:
+
+```bash
+npm install -g omnifocus-mcp-server
+```
+
+Or link it from source:
+
+```bash
+npm link
+```
+
+### Usage
+
+```bash
+of --help
+```
+
+#### Common Commands
+
+- **List Inbox:** `of list inbox` (alias: `of ls i`)
+- **Add Task:** `of add "Buy milk" --due today --flagged`
+- **Complete Task:** `of complete <id>` (alias: `of done <id>`)
+- **Search:** `of search "report"`
+- **Projects:** `of list projects`
+- **Sync:** `of sync`
+
+#### Global Flags
+
+- `--json`: Output as raw JSON (useful for `jq`)
+- `--pretty`: Pretty-print JSON output
+- `--quiet, -q`: Output only IDs (useful for piping: `of ls i -q | xargs of complete`)
+- `--dry-run`: Preview changes without executing them
+
+### Natural Dates
+
+The CLI supports natural date strings: `today`, `tomorrow`, `next week`, `+3d`, `+1w`, `+1m`.
+
+### Batch Add
+
+You can create complex hierarchies from an indented outline via stdin:
+
+```bash
+cat <<EOF | of add batch
+- Project Name
+  - Task 1 #tag1 due:tomorrow
+  - Task 2 #tag2 defer:+2d
+EOF
+```
 
 ## Examples
 
@@ -146,11 +204,14 @@ Add to `~/.gemini/settings.json`:
 - Node.js >= 18
 - Automation permission granted in System Settings > Privacy & Security > Automation
 
-## Security
+## CLI vs. MCP Server
 
-This server has **full read/write access** to your OmniFocus database. It can create, modify, and delete tasks, projects, folders, and tags. Only connect it to AI clients and models you trust.
+While both the CLI (`of`) and the MCP server share the same core `OmniFocusClient` and TypeScript foundation, they are optimized for different workflows:
 
-No data leaves your machine — all communication happens locally via `osascript`.
+- **CLI (`of`):** A power-user layer for macOS. It currently offers a larger surface area than the MCP server, including specialized features like natural date parsing (`+3d`, `next week`), indented outline batching, variadic target selection, and direct access to macOS-only features like the Quick Entry panel (`of qe`) and full database sync (`of sync`).
+- **MCP Server:** Designed for general-purpose AI reasoning. It exposes a standardized set of tools for AI models (like Claude or Gemini) to interact with your database using structured JSON. It prioritizes cross-platform AI compatibility and stable tool definitions.
+
+The CLI is currently the authoritative layer for advanced macOS scripting and terminal-based task management.
 
 ## Tools
 
@@ -307,3 +368,9 @@ PRs welcome. Please run `npm test` before submitting and include tests for new t
 ## License
 
 MIT
+
+## Attribution
+
+This project is a fork of the original [OmniFocus MCP Server](https://github.com/IllyaStarikov/omnifocus-mcp) by **Illya Starikov**. 
+
+The **CLI-MCP** expansion was implemented by **Ian Shen**, introducing the command-line layer, codegen toolchain, and advanced macOS-native features.

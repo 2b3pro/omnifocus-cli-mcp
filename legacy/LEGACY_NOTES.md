@@ -37,4 +37,4 @@ High-value pieces from the legacy CLI that the MCP foundation doesn't have:
 
 ## Status
 
-Frozen snapshot. Do not modify here — modifications belong upstream in the new TypeScript codebase. This dir exists purely as a reading reference during the port.
+Migration Complete (Apr 25, 2026). All high-value features (CLI surface, output modes, dry-run, outline parsing, natural dates, quick entry, and LLM docs) have been ported to the new TypeScript/MCP foundation. This directory remains for historical reference only.

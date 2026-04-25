@@ -18,29 +18,15 @@ import {
   buildMarkReviewedScript,
   buildGetProjectTasksScript,
 } from "./scripts/projects.js";
-import {
-  buildListTasksScript,
-  buildGetTaskScript,
-  buildCreateTaskScript,
-  buildUpdateTaskScript,
-  buildCompleteTaskScript,
-  buildUncompleteTaskScript,
-  buildDropTaskScript,
-  buildDeleteTaskScript,
-  buildMoveTasksScript,
-  buildDuplicateTasksScript,
-  buildSetTaskTagsScript,
-  buildAddTaskNotificationScript,
-  buildAppendTaskNoteScript,
-  buildConvertTaskToProjectScript,
-  buildGetTodayCompletedTasksScript,
-  buildListTaskNotificationsScript,
-  buildRemoveTaskNotificationScript,
-  buildBatchCreateTasksScript,
-  buildBatchDeleteTasksScript,
-  buildBatchCompleteTasksScript,
-  buildGetTaskCountScript,
-} from "./scripts/tasks.js";
+import { buildListTasksScript, buildGetTaskScript, buildCreateTaskScript, buildUpdateTaskScript, buildCompleteTaskScript, buildUncompleteTaskScript, buildDropTaskScript, buildDeleteTaskScript, buildMoveTasksScript, buildDuplicateTasksScript, buildSetTaskTagsScript, buildAddTaskNotificationScript, buildAppendTaskNoteScript, buildConvertTaskToProjectScript, buildGetTodayCompletedTasksScript, buildListTaskNotificationsScript, buildRemoveTaskNotificationScript, buildBatchCreateTasksScript, buildBatchDeleteTasksScript, buildBatchCompleteTasksScript, buildGetTaskCountScript } from "./scripts/tasks.js";
+import { 
+  buildHoldProjectScript, 
+  buildActivateProjectScript, 
+  buildSyncScript, 
+  buildReorderTaskScript, 
+  buildQuickEntryScript,
+  buildGetForecastScript
+} from "./scripts/cli-extras.js";
 import type {
   DatabaseSummaryJSON,
   DatabaseDumpJSON,
@@ -445,6 +431,43 @@ export class OmniFocusClient {
 
     const result = await runOmniJSJson<TaskJSON[]>(buildGetPerspectiveTasksScript(name));
     this.cache.set(cacheKey, result, config.cacheTTL.tasks);
+    return result;
+  }
+
+  // ─── Utility ──────────────────────────────────────────────────────
+
+  async ping(): Promise<{ ok: true; version: string }> {
+    return runOmniJSJson<{ ok: true; version: string }>(`JSON.stringify({ ok: true, version: app.version })`);
+  }
+
+  async holdProject(idOrName: string): Promise<ProjectJSON> {
+    const result = await runOmniJSJson<ProjectJSON>(buildHoldProjectScript(idOrName));
+    this.invalidateAfterMutation("projects:");
+    return result;
+  }
+
+  async activateProject(idOrName: string): Promise<ProjectJSON> {
+    const result = await runOmniJSJson<ProjectJSON>(buildActivateProjectScript(idOrName));
+    this.invalidateAfterMutation("projects:");
+    return result;
+  }
+
+  async sync(): Promise<{ success: boolean; message: string }> {
+    return runOmniJSJson<{ success: boolean; message: string }>(buildSyncScript());
+  }
+
+  async reorderTask(taskId: string, position: { top?: boolean, bottom?: boolean, before?: string, after?: string }): Promise<TaskJSON> {
+    const result = await runOmniJSJson<TaskJSON>(buildReorderTaskScript(taskId, position));
+    this.invalidateAfterMutation("tasks:");
+    return result;
+  }
+
+  async quickEntry(args: any): Promise<{ success: boolean; opened: true }> {
+    return runOmniJSJson<{ success: boolean; opened: true }>(buildQuickEntryScript(args));
+  }
+
+  async getForecast(days: number = 7): Promise<any[]> {
+    const result = await runOmniJSJson<any[]>(buildGetForecastScript(days));
     return result;
   }
 

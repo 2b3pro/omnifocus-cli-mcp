@@ -1,11 +1,12 @@
 {
   "name": "omnifocus-mcp-server",
   "version": "1.0.7",
-  "description": "MCP server for OmniFocus via Omni Automation API",
+  "description": "OmniFocus CLI-MCP: CLI and MCP server for OmniFocus via Omni Automation API",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "omnifocus-mcp-server": "dist/index.js"
+    "omnifocus-mcp-server": "dist/index.js",
+    "of": "dist/bin/of.js"
   },
   "files": [
     "dist",
@@ -13,16 +14,22 @@
     "LICENSE"
   ],
   "scripts": {
+    "codegen": "tsx scripts/codegen/index.ts",
+    "codegen:check": "tsx scripts/codegen/index.ts --check",
+    "prebuild": "npm run codegen",
     "build": "tsc",
+    "postbuild": "chmod +x dist/bin/of.js",
     "dev": "tsx src/index.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:integration": "OMNIFOCUS_LIVE=1 vitest run tests/integration",
     "test:smoke": "node scripts/smoke-test.mjs",
+    "smoke:cli": "bash scripts/smoke-cli.sh",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",
+    "commander": "^12.1.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
@@ -44,11 +51,11 @@
     "claude",
     "ai"
   ],
-  "author": "Illya Starikov",
+  "author": "Ian Shen",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/IllyaStarikov/omnifocus-mcp.git"
+    "url": "git+https://github.com/2b3pro/omnifocus-cli-mcp.git"
   },
-  "homepage": "https://github.com/IllyaStarikov/omnifocus-mcp",
+  "homepage": "https://github.com/2b3pro/omnifocus-cli-mcp",
   "license": "MIT"
 }
