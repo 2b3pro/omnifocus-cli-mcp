@@ -15,7 +15,9 @@ Uses [Omni Automation](https://omni-automation.com/) (OmniJS) under the hood, ex
 
 - [Examples](#examples)
 - [Install](#install)
+- [New in this Fork](#-new-in-this-fork-cli-mcp)
 - [Requirements](#requirements)
+- [CLI vs. MCP Server](#cli-vs-mcp-server)
 - [Security](#security)
 - [CLI](#cli)
 - [Tools](#tools)
@@ -196,6 +198,17 @@ Add to `~/.gemini/settings.json`:
 ```
 
 </details>
+
+### 🚀 New in this Fork (CLI-MCP)
+
+This fork expands the original MCP server into a comprehensive toolkit for OmniFocus power users:
+
+- **Full CLI Layer (`of`):** Direct terminal access with functional parity to the original `omnifocus-cli`.
+- **Indented Outline Support:** Batch-create complex project/task hierarchies from simple indented text via `of add batch`.
+- **Natural Date Parsing:** Support for `+3d`, `next week`, `tomorrow`, etc., directly in the terminal.
+- **Expanded Client API:** New support for full database sync, Forecast views, and the macOS Quick Entry panel.
+- **Codegen Toolchain:** A metadata-driven architecture that ensures the CLI, MCP, and documentation always stay in sync.
+- **Agent-Optimized Docs:** Auto-generated `cli-reference-llm.md` specifically designed for token-efficient AI consumption.
 
 ## Requirements
 
