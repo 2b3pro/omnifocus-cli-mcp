@@ -5,7 +5,7 @@
 
 > ✔️ Turn prompts into projects.
 
-Feature-complete [Model Context Protocol](https://modelcontextprotocol.io/) server and powerful CLI for [OmniFocus](https://www.omnigroup.com/omnifocus). Full read/write access to tasks, projects, folders, tags, and perspectives — 50 tools, 2 resources, and 3 prompts.
+Feature-complete [Model Context Protocol](https://modelcontextprotocol.io/) server and powerful CLI for [OmniFocus](https://www.omnigroup.com/omnifocus). Full read/write access to tasks, projects, folders, tags, and perspectives — 51 tools, 7 resources, and 4 prompts.
 
 Uses [Omni Automation](https://omni-automation.com/) (OmniJS) under the hood, executing scripts via JXA and `osascript`. This is why macOS is required.
 
@@ -56,9 +56,11 @@ of --help
 
 - **List Inbox:** `of list inbox` (alias: `of ls i`)
 - **Add Task:** `of add "Buy milk" --due today --flagged`
+- **Modify Task:** `of modify <id> --tags work,urgent --due tomorrow -f` (combine any number of flags; also `--add-tag`/`--remove-tag`, `--due-by +3d`, `--clear-due`, `--project`)
 - **Complete Task:** `of complete <id>` (alias: `of done <id>`)
-- **Search:** `of search "report"`
+- **Search:** `of search "report"` — or filter: `of search --tag waiting --project "Q3 Launch" --flagged`
 - **Projects:** `of list projects`
+- **Today:** `of list today`
 - **Sync:** `of sync`
 
 #### Global Flags
@@ -207,8 +209,12 @@ This fork expands the original MCP server into a comprehensive toolkit for OmniF
 - **Indented Outline Support:** Batch-create complex project/task hierarchies from simple indented text via `of add batch`.
 - **Natural Date Parsing:** Support for `+3d`, `next week`, `tomorrow`, etc., directly in the terminal.
 - **Expanded Client API:** New support for full database sync, Forecast views, and the macOS Quick Entry panel.
-- **Codegen Toolchain:** A metadata-driven architecture that ensures the CLI, MCP, and documentation always stay in sync.
+- **Unified `query_omnifocus` Tool:** A single MCP read tool for tasks or projects with composable filters, plus `summary` (counts only) and `fields` (projection) modes to keep AI context small.
+- **Rich MCP Resources:** Read `inbox`, `today`, `flagged`, plus `project/{idOrName}` and `perspective/{name}` templates directly — no tool call required — and server-level usage instructions for AI clients.
+- **Multi-Flag Editing & Filtered Search:** `of modify` applies any combination of fields in one call (tags replace/add/remove, relative/clear dates, project move); `of search` supports project/tag/flagged/available/due filters.
+- **Codegen Toolchain:** A metadata-driven architecture that ensures the CLI, MCP, and documentation always stay in sync, with a real drift check (`npm run codegen:check`).
 - **Agent-Optimized Docs:** Auto-generated `cli-reference-llm.md` specifically designed for token-efficient AI consumption.
+- **Safe Live Test Harness:** Integration tests create prefix-tagged items and clean up after themselves, with a standalone orphan sweep (`npm run test:integration:cleanup`).
 
 ## Requirements
 
@@ -299,10 +305,11 @@ The CLI is currently the authoritative layer for advanced macOS scripting and te
 | `list_perspectives` | List perspectives (built-in and/or custom) |
 | `get_perspective_tasks` | Get tasks shown in a specific perspective |
 
-### Database (4)
+### Database & Query (5)
 
 | Tool | Description |
 |------|-------------|
+| `query_omnifocus` | Unified read query for tasks or projects with composable filters; supports `summary` (count only) and `fields` (projection) to minimize context. Prefer over `dump_database` for targeted lookups |
 | `get_database_summary` | Get counts of inbox items, projects, tags, folders, and task statistics |
 | `search` | Search across all items (tasks, projects, folders, tags) by name or note |
 | `dump_database` | Dump the entire database in a single call |
@@ -310,10 +317,17 @@ The CLI is currently the authoritative layer for advanced macOS scripting and te
 
 ## Resources
 
+Resources let an AI client read common views without a tool call. The last two are URI templates with name completion.
+
 | URI | Description |
 |-----|-------------|
+| `omnifocus://inbox` | Current inbox tasks |
+| `omnifocus://today` | Tasks due today or overdue (not completed) |
+| `omnifocus://flagged` | All flagged tasks |
 | `omnifocus://database/summary` | Database summary with counts |
 | `omnifocus://perspectives` | List of all perspectives |
+| `omnifocus://project/{idOrName}` | A project and its tasks (by name or ID) |
+| `omnifocus://perspective/{name}` | Tasks visible in a named perspective |
 
 ## Prompts
 
@@ -322,6 +336,7 @@ The CLI is currently the authoritative layer for advanced macOS scripting and te
 | `weekly-review` | Walk through your GTD weekly review: check projects due for review, process leftover inbox items, reassess flagged tasks, and get a structured summary. Marks projects as reviewed when done. |
 | `inbox-processing` | Process inbox items one-by-one using GTD methodology — delete non-actionable items, do anything under 2 minutes, and organize the rest into projects with tags and dates. |
 | `daily-planning` | Build a prioritized plan for today based on due dates, flagged items, and what you've already completed. Surfaces overdue tasks and estimates your workload. |
+| `project-planning` | Turn a project (by name or ID) into a sequenced, actionable work breakdown with effort estimates and risks, then apply it after your approval. Plans hypothetically with a create prompt if the project doesn't exist yet. |
 
 ## Troubleshooting
 
@@ -360,18 +375,23 @@ Each tool call runs an `osascript` process to communicate with OmniFocus. This t
 
 ```bash
 npm install
-npm run build      # Compile TypeScript
-npm run dev        # Run with tsx (hot reload)
-npm test           # Run unit tests
-npm run test:watch # Watch mode
+npm run build         # Compile TypeScript (runs codegen first)
+npm run dev           # Run with tsx (hot reload)
+npm test              # Run unit tests
+npm run test:watch    # Watch mode
+npm run codegen       # Regenerate CLI commands + reference docs from cli-metadata.ts
+npm run codegen:check # Fail if generated files drift from the metadata
 ```
+
+The CLI command layer and `cli-reference*.md` are generated from `scripts/codegen/cli-metadata.ts` — edit the metadata, not the generated files, then run `npm run codegen`.
 
 ### Integration Tests
 
-Tests against a real OmniFocus instance (creates and cleans up test items):
+Tests against a real OmniFocus instance. Created items are prefixed with `TEST:` and torn down automatically (children before parents):
 
 ```bash
 OMNIFOCUS_LIVE=1 npm run test:integration
+npm run test:integration:cleanup   # sweep orphaned TEST: items if a run was interrupted
 ```
 
 ### Contributing
