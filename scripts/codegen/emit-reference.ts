@@ -84,8 +84,28 @@ function generateHumanReference(): string {
     }
   }
 
+  content += SUPPORT_FOOTER;
   return content;
 }
+
+const SUPPORT_FOOTER = `---
+
+## Support
+
+If this project helps you manage OmniFocus from your terminal or build cool agents, consider buying me a coffee! It helps keep the updates coming.
+
+<a href="https://paypal.me/2b3/5">
+  <img src="https://img.shields.io/badge/Donate-PayPal-blue.svg" alt="Donate with PayPal" />
+</a>
+
+**[https://paypal.me/2b3/5](https://paypal.me/2b3/5)**
+
+---
+
+## License
+
+MIT License - Created by [Ian Shen](https://github.com/2b3pro).
+`;
 
 function generateLLMReference(): string {
   // LLM variant is token-optimized
