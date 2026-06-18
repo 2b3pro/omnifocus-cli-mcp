@@ -6,9 +6,20 @@ import { CLI_METADATA } from "./cli-metadata.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.join(__dirname, "../../");
 
+/**
+ * Pure generator: { relativePath -> fileContent } for the reference docs.
+ * Used by both emitReference (writes) and the drift check.
+ */
+export function generateReferenceFiles(): Record<string, string> {
+  return {
+    "cli-reference.md": generateHumanReference(),
+    "cli-reference-llm.md": generateLLMReference(),
+  };
+}
+
 export function emitReference() {
   const outputDir = PROJECT_ROOT;
-  
+
   const humanRef = generateHumanReference();
   const llmRef = generateLLMReference();
 

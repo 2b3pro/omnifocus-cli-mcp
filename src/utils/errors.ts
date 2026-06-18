@@ -46,11 +46,11 @@ export class ScriptError extends OmniFocusError {
 export function parseExecutorError(stderr: string, exitCode: number | null): OmniFocusError {
   const lower = stderr.toLowerCase();
 
-  if (lower.includes("not running") || lower.includes("connection is invalid") || lower.includes("-600")) {
+  if (lower.includes("not running") || lower.includes("isn't running") || lower.includes("connection is invalid") || lower.includes("-600")) {
     return new NotRunningError();
   }
 
-  if (lower.includes("not permitted") || lower.includes("not authorized") || lower.includes("-1743")) {
+  if (lower.includes("not permitted") || lower.includes("not authorized") || lower.includes("not authorised") || lower.includes("apple events") || lower.includes("-1743")) {
     return new PermissionError();
   }
 
@@ -58,7 +58,27 @@ export function parseExecutorError(stderr: string, exitCode: number | null): Omn
     return new TimeoutError();
   }
 
-  return new ScriptError(stderr.trim() || `Script failed with exit code ${exitCode}`);
+  const cleaned = cleanScriptMessage(stderr);
+
+  // OmniJS "<thing> not found: <id>" — surface it cleanly and distinctly.
+  if (/\bnot found\b/i.test(cleaned)) {
+    return new NotFoundError(cleaned);
+  }
+
+  return new ScriptError(cleaned || `Script failed with exit code ${exitCode}`);
+}
+
+/**
+ * Strip osascript/OmniJS wrapping noise so the meaningful message surfaces.
+ * "execution error: Error: Error: Error: Task not found: X undefined:11:29 (3)"
+ *   → "Task not found: X"
+ */
+export function cleanScriptMessage(stderr: string): string {
+  let m = stderr.trim();
+  m = m.replace(/^execution error:\s*/i, "");                  // osascript prefix
+  m = m.replace(/^(?:Error:\s*)+/i, "");                        // repeated "Error: " wrapping
+  m = m.replace(/\s+[^\s:]+:\d+:\d+(?:\s*\(\d+\))?\s*$/, "");   // trailing " undefined:11:29 (3)"
+  return m.trim();
 }
 
 export function formatMcpError(error: unknown): { message: string; isRetryable: boolean } {

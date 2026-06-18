@@ -34,7 +34,7 @@ describe("MCP Prompts", () => {
   it("should list all registered prompts", async () => {
     const result = await client.listPrompts();
     const promptNames = result.prompts.map((p) => p.name).sort();
-    expect(promptNames).toEqual(["daily-planning", "inbox-processing", "weekly-review"]);
+    expect(promptNames).toEqual(["daily-planning", "inbox-processing", "project-planning", "weekly-review"]);
   });
 
   it("should return weekly-review prompt with instructions", async () => {

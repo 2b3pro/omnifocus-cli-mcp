@@ -1,6 +1,35 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
 
 export function registerPrompts(server: McpServer): void {
+  server.prompt(
+    "project-planning",
+    "Turn a project into a sequenced, actionable plan, with an approval gate before applying changes",
+    { project: z.string().min(1).describe("Project name or ID to plan") },
+    async ({ project }) => ({
+      messages: [{
+        role: "user" as const,
+        content: {
+          type: "text" as const,
+          text: `Plan the OmniFocus project "${project}" into clear, executable work.
+
+1. Call get_project with "${project}" to load it, and get_project_tasks for its current tasks. If it isn't found, plan from intent instead and ask whether to create it (treat status as "not_found").
+2. Summarize the project's intended outcome in one concise sentence.
+3. Evaluate current task coverage and identify missing steps; turn vague items into concrete, verb-first next actions (observable "done" state).
+4. Sequence the work (dependencies first, then what can run in parallel); estimate effort and flag high-risk items.
+
+Output format:
+- Project summary (one sentence)
+- Work breakdown table: action | estimate | priority | dependency | suggested tags | due/defer | rationale
+- The first 3 actions to execute now
+- Risk/blocker list with mitigation ideas
+
+Engagement protocol: this is OmniFocus execution planning, not a detached document. After presenting the plan, ask for explicit confirmation before applying it. Once approved, make the changes (create_project if needed, create_task, update_task, set_task_tags) and report the created/updated IDs. Ask for explicit confirmation before deleting anything.`,
+        },
+      }],
+    }),
+  );
+
   server.prompt(
     "weekly-review",
     "Guided weekly review of OmniFocus projects and tasks",
