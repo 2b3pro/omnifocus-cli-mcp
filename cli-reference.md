@@ -125,18 +125,20 @@ List all tags.
 
 ### `of tag tasks`
 
-List tasks with a specific tag.
+List tasks carrying tag(s). Comma-separate for multi-tag search.
 
 **Aliases:** `tag list`
 
 **Arguments:**
 
-- `name` (idOrName): Tag name or ID
+- `tags` (idOrName): Tag name(s) or ID — comma-separated for multiple
 
 **Options:**
 
 - `--limit`, `-l` (number): Maximum results
 - `--all`, `-a` (boolean): Include completed tasks
+- `--match`, `-m` (string): Multi-tag mode: any (union) or all (intersection)
+- `--full` (boolean): Include full fields (tags, note, project) — needed to tell which tag matched
 
 ### `of add`
 

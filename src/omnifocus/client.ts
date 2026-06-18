@@ -117,6 +117,35 @@ export class OmniFocusClient {
     return result;
   }
 
+  /**
+   * List tasks carrying one or more tags. Accepts a comma-separated string
+   * (CLI positional) or an array. `match` controls multi-tag semantics:
+   * "any" (default) → union, "all" → intersection.
+   */
+  async listTasksByTag(args: {
+    tags?: string | string[];
+    name?: string;
+    match?: "any" | "all";
+    limit?: number | string;
+    all?: boolean;
+  }): Promise<TaskJSON[]> {
+    const raw = args.tags ?? args.name ?? [];
+    const tagList = (Array.isArray(raw) ? raw : String(raw).split(","))
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (tagList.length === 0) throw new Error("At least one tag is required");
+
+    const match = args.match === "all" ? "all" : "any";
+    const limit = args.limit !== undefined ? Number(args.limit) : 100;
+
+    const listArgs: ListTasksArgs = { limit: Number.isFinite(limit) ? limit : 100 };
+    if (!args.all) listArgs.completed = false;
+    if (match === "all") listArgs.tagNames = tagList;
+    else listArgs.tagNamesAny = tagList;
+
+    return this.listTasks(listArgs);
+  }
+
   async getTask(idOrArgs: string | GetTaskArgs): Promise<TaskJSON | TaskWithChildrenJSON> {
     const args = typeof idOrArgs === "string" ? { id: idOrArgs } : idOrArgs;
     const cacheKey = `tasks:get:${JSON.stringify(args)}`;

@@ -52,12 +52,22 @@ const taskFilterLogicFn = `
       if (!t.containingProject || t.containingProject.name !== args.projectName) return false;
     }
 
-    // Filter by tag names
+    // Filter by tag names — must carry ALL (intersection)
     if (args.tagNames && args.tagNames.length > 0) {
       var taskTagNames = t.tags.map(function(tg) { return tg.name; });
       for (var i = 0; i < args.tagNames.length; i++) {
         if (taskTagNames.indexOf(args.tagNames[i]) === -1) return false;
       }
+    }
+
+    // Filter by tag names — must carry ANY (union)
+    if (args.tagNamesAny && args.tagNamesAny.length > 0) {
+      var taskTagNamesAny = t.tags.map(function(tg) { return tg.name; });
+      var _hasAny = false;
+      for (var k = 0; k < args.tagNamesAny.length; k++) {
+        if (taskTagNamesAny.indexOf(args.tagNamesAny[k]) !== -1) { _hasAny = true; break; }
+      }
+      if (!_hasAny) return false;
     }
 
     // Filter by due date range

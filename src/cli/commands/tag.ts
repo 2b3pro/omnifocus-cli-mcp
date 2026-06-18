@@ -8,11 +8,13 @@ export function registerTagCommands(program: Command, client: OmniFocusClient) {
   const tag = program.command("tag").description("tag commands");
 
   tag.command("tasks")
-    .description("List tasks with a specific tag.")
+    .description("List tasks carrying tag(s). Comma-separate for multi-tag search.")
     .alias("tag list")
-    .argument("<name>", "Tag name or ID")
+    .argument("<tags>", "Tag name(s) or ID — comma-separated for multiple")
     .option("-l, --limit <number>", "Maximum results", "100")
     .option("-a, --all", "Include completed tasks")
+    .option("-m, --match <string>", "Multi-tag mode: any (union) or all (intersection)", "any")
+    .option("--full", "Include full fields (tags, note, project) — needed to tell which tag matched")
     .action(async (...args) => {
       const options = args[args.length - 2];
       const command = args[args.length - 1];
@@ -30,14 +32,16 @@ export function registerTagCommands(program: Command, client: OmniFocusClient) {
       }
 
       // Map positional args
-      clientArgs["name"] = positionalArgs[0];
+      clientArgs["tags"] = positionalArgs[0];
 
       // Map flags
       if (options.limit !== undefined) clientArgs["limit"] = options.limit;
       if (options.all !== undefined) clientArgs["all"] = options.all;
+      if (options.match !== undefined) clientArgs["match"] = options.match;
+      if (options.full !== undefined) clientArgs["full"] = options.full;
 
       
-      const result = await (client as any).listTags(clientArgs);
+      const result = await (client as any).listTasksByTag(clientArgs);
       
       formatOutput(result, { ...program.opts(), ...options }, "task[]");
     });

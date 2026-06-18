@@ -47,8 +47,8 @@ FLAGS: --limit|-l, --hidden
 
 ### `of tag tasks`
 ALIAS: `tag list`
-ARGS: name!
-FLAGS: --limit|-l, --all|-a
+ARGS: tags!
+FLAGS: --limit|-l, --all|-a, --match|-m, --full
 
 ### `of add`
 ALIAS: `add t`, `add task`

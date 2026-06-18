@@ -194,17 +194,23 @@ export const CLI_METADATA: Partial<Record<keyof OmniFocusClient, MethodMeta>> = 
         ],
         outputShape: "tag[]",
       },
+    ],
+  },
+  listTasksByTag: {
+    commands: [
       {
         name: "tag tasks",
         aliases: ["tag list"],
-        description: "List tasks with a specific tag.",
+        description: "List tasks carrying tag(s). Comma-separate for multi-tag search.",
         category: "read",
         positional: [
-          { name: "name", type: "idOrName", required: true, description: "Tag name or ID" },
+          { name: "tags", type: "idOrName", required: true, description: "Tag name(s) or ID — comma-separated for multiple" },
         ],
         flags: [
           { long: "limit", short: "l", type: "number", default: 100, description: "Maximum results" },
           { long: "all", short: "a", type: "boolean", description: "Include completed tasks" },
+          { long: "match", short: "m", type: "string", default: "any", description: "Multi-tag mode: any (union) or all (intersection)" },
+          { long: "full", type: "boolean", description: "Include full fields (tags, note, project) — needed to tell which tag matched" },
         ],
         outputShape: "task[]",
       },

@@ -131,7 +131,10 @@ export interface ListTasksArgs {
   inInbox?: boolean;
   projectId?: string;
   projectName?: string;
+  /** Task must carry ALL of these tags (intersection). */
   tagNames?: string[];
+  /** Task must carry ANY of these tags (union). */
+  tagNamesAny?: string[];
   dueAfter?: string;
   dueBefore?: string;
   deferAfter?: string;
