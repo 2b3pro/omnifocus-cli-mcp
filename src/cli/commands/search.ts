@@ -38,8 +38,8 @@ export function registerSearchCommands(program: Command, client: OmniFocusClient
       if (options.tag !== undefined) clientArgs["tag"] = options.tag;
       if (options.flagged !== undefined) clientArgs["flagged"] = options.flagged;
       if (options.available !== undefined) clientArgs["available"] = options.available;
-      if (options.dueBefore) clientArgs["due-before"] = parseCliDate(options.dueBefore);
-      if (options.dueAfter) clientArgs["due-after"] = parseCliDate(options.dueAfter);
+      if (options.dueBefore) clientArgs["dueBefore"] = parseCliDate(options.dueBefore);
+      if (options.dueAfter) clientArgs["dueAfter"] = parseCliDate(options.dueAfter);
 
       
       const result = await (client as any).search(clientArgs);

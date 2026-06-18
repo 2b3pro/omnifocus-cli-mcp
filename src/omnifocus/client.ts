@@ -57,6 +57,7 @@ import type {
   GetProjectTasksArgs,
   MoveProjectArgs,
   ReorderTaskArgs,
+  SearchArgs,
   DumpDatabaseArgs,
   CreateFolderArgs,
   UpdateFolderArgs,
@@ -83,14 +84,15 @@ export class OmniFocusClient {
     return result;
   }
 
-  async search(queryOrArgs: string | { query?: string; limit?: number }, limit = 50): Promise<Array<{ type: string; id: string; name: string; note?: string }>> {
-    const query = typeof queryOrArgs === "string" ? queryOrArgs : (queryOrArgs.query ?? "");
-    if (typeof queryOrArgs !== "string" && queryOrArgs.limit !== undefined) limit = queryOrArgs.limit;
-    const cacheKey = `database:search:${query}:${limit}`;
+  async search(queryOrArgs: string | SearchArgs, limit = 50): Promise<Array<{ type: string; id: string; name: string; note?: string }>> {
+    const args: SearchArgs = typeof queryOrArgs === "string"
+      ? { query: queryOrArgs, limit }
+      : { limit, ...queryOrArgs };
+    const cacheKey = `database:search:${JSON.stringify(args)}`;
     const cached = this.cache.get<Array<{ type: string; id: string; name: string; note?: string }>>(cacheKey);
     if (cached) return cached;
 
-    const result = await runOmniJSJson<Array<{ type: string; id: string; name: string; note?: string }>>(buildSearchScript(query, limit));
+    const result = await runOmniJSJson<Array<{ type: string; id: string; name: string; note?: string }>>(buildSearchScript(args));
     this.cache.set(cacheKey, result, config.cacheTTL.database);
     return result;
   }

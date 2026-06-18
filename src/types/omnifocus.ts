@@ -320,8 +320,22 @@ export interface UpdateTagArgs {
 }
 
 export interface SearchArgs {
-  query: string;
+  query?: string;
   limit?: number;
+  /** Include completed tasks (default: excluded). */
+  all?: boolean;
+  /** Only tasks in this project (name or ID). */
+  project?: string;
+  /** Only tasks carrying this tag (name or ID). */
+  tag?: string;
+  /** Only flagged tasks. */
+  flagged?: boolean;
+  /** Only available tasks. */
+  available?: boolean;
+  /** Only tasks due on/before this ISO date. */
+  dueBefore?: string;
+  /** Only tasks due on/after this ISO date. */
+  dueAfter?: string;
 }
 
 export interface BatchCreateTaskItem {

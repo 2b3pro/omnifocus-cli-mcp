@@ -59,6 +59,33 @@ describe("database script builders", () => {
       expect(script).toContain('(t.note || "")');
       expect(script).toContain('(p.note || "")');
     });
+
+    it("should accept an args object with filters", () => {
+      const script = buildSearchScript({ query: "foo", limit: 10, project: "Work", tag: "urgent", flagged: true, available: true });
+      expect(script).toContain("Work");
+      expect(script).toContain("urgent");
+      expect(script).toContain("containingProject");
+      expect(script).toContain("flagged");
+      expect(script).toContain("Task.Status.Available");
+    });
+
+    it("should exclude completed by default and include them with all", () => {
+      const def = buildSearchScript({ query: "foo" });
+      expect(def).toContain("Task.Status.Completed");
+      const all = buildSearchScript({ query: "foo", all: true });
+      expect(all).toContain("args.all");
+    });
+
+    it("should filter by due date range", () => {
+      const script = buildSearchScript({ dueBefore: "2026-12-31T00:00:00Z", dueAfter: "2026-01-01T00:00:00Z" });
+      expect(script).toContain("dueBefore");
+      expect(script).toContain("dueAfter");
+    });
+
+    it("should restrict to tasks when a task filter is set (no projects/tags)", () => {
+      const script = buildSearchScript({ tag: "urgent" });
+      expect(script).toContain("hasTaskFilter");
+    });
   });
 
   describe("buildDumpDatabaseScript", () => {
