@@ -40,7 +40,9 @@ export function buildSearchScript(queryOrArgs: string | SearchArgs, limit = 50):
   var query = (args.query || "").toLowerCase();
   var limit = args.limit || 50;
   // Task-specific filters; when any is set, only tasks are returned.
-  var hasTaskFilter = !!(args.project || args.tag || args.flagged || args.available || args.dueBefore || args.dueAfter);
+  var tagNamesAll = args.tagNames && args.tagNames.length > 0 ? args.tagNames : null;
+  var tagNamesAny = args.tagNamesAny && args.tagNamesAny.length > 0 ? args.tagNamesAny : null;
+  var hasTaskFilter = !!(args.project || args.tag || tagNamesAll || tagNamesAny || args.flagged || args.available || args.dueBefore || args.dueAfter);
   var dueBefore = args.dueBefore ? new Date(args.dueBefore) : null;
   var dueAfter = args.dueAfter ? new Date(args.dueAfter) : null;
 
@@ -64,6 +66,24 @@ export function buildSearchScript(queryOrArgs: string | SearchArgs, limit = 50):
         if (tt[k].id.primaryKey === args.tag || tt[k].name === args.tag) { tagged = true; break; }
       }
       if (!tagged) continue;
+    }
+    if (tagNamesAll || tagNamesAny) {
+      var taskTagKeys = t.tags.map(function(tg) { return tg.name; })
+        .concat(t.tags.map(function(tg) { return tg.id.primaryKey; }));
+      if (tagNamesAll) {
+        var hasAll = true;
+        for (var a = 0; a < tagNamesAll.length; a++) {
+          if (taskTagKeys.indexOf(tagNamesAll[a]) === -1) { hasAll = false; break; }
+        }
+        if (!hasAll) continue;
+      }
+      if (tagNamesAny) {
+        var hasAny = false;
+        for (var b = 0; b < tagNamesAny.length; b++) {
+          if (taskTagKeys.indexOf(tagNamesAny[b]) !== -1) { hasAny = true; break; }
+        }
+        if (!hasAny) continue;
+      }
     }
     if (dueBefore && (!t.dueDate || t.dueDate > dueBefore)) continue;
     if (dueAfter && (!t.dueDate || t.dueDate < dueAfter)) continue;

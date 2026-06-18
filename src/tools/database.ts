@@ -23,14 +23,25 @@ export function registerDatabaseTools(server: McpServer, client: OmniFocusClient
 
   server.tool(
     "search",
-    "Search across all OmniFocus items (tasks, projects, folders, tags) by name or note content",
+    "Search across all OmniFocus items (tasks, projects, folders, tags) by name or note content. " +
+      "Add any task filter (project, tag, flagged, available, date range) to restrict to matching tasks only. " +
+      "Query is optional when filtering — omit it to list all tasks matching the filters.",
     {
-      query: z.string().min(1).describe("Search query string"),
+      query: z.string().optional().describe("Search query string (matches name/note); optional when using filters"),
       limit: z.number().min(1).max(200).optional().describe("Maximum number of results (default 50)"),
+      all: z.boolean().optional().describe("Include completed tasks (default: excluded)"),
+      project: z.string().optional().describe("Only tasks in this project (name or ID)"),
+      tag: z.string().optional().describe("Only tasks carrying this tag (name or ID)"),
+      tagNames: z.array(z.string()).optional().describe("Only tasks carrying ALL these tags (intersection)"),
+      tagNamesAny: z.array(z.string()).optional().describe("Only tasks carrying ANY of these tags (union)"),
+      flagged: z.boolean().optional().describe("Only flagged tasks"),
+      available: z.boolean().optional().describe("Only available (actionable) tasks"),
+      dueBefore: z.string().optional().describe("Only tasks due on/before this ISO date"),
+      dueAfter: z.string().optional().describe("Only tasks due on/after this ISO date"),
     },
-    async ({ query, limit }) => {
+    async (args) => {
       try {
-        const results = await client.search(query, limit);
+        const results = await client.search(args);
         return {
           content: [{ type: "text" as const, text: JSON.stringify(results, null, 2) }],
         };

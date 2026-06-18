@@ -331,6 +331,10 @@ export interface SearchArgs {
   project?: string;
   /** Only tasks carrying this tag (name or ID). */
   tag?: string;
+  /** Only tasks carrying ALL of these tags (name or ID — intersection). */
+  tagNames?: string[];
+  /** Only tasks carrying ANY of these tags (name or ID — union). */
+  tagNamesAny?: string[];
   /** Only flagged tasks. */
   flagged?: boolean;
   /** Only available tasks. */
