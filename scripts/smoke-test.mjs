@@ -703,10 +703,10 @@ await test("update_project: clear dueDate, set sequential=false", async () => {
 
 await test("move_project: SAL to SubFolder, then back to Folder", async () => {
   // Move to SubFolder
-  let result = await runOmniJSJson(projects.buildMoveProjectScript(ids.sal, ids.subFolder));
+  let result = await runOmniJSJson(projects.buildMoveProjectScript({ projectId: ids.sal, folderId: ids.subFolder }));
   assert(result.containingFolderName === "__MCPTEST__SubFolder", `containingFolderName=${result.containingFolderName}`);
   // Move back to Folder
-  result = await runOmniJSJson(projects.buildMoveProjectScript(ids.sal, ids.folder));
+  result = await runOmniJSJson(projects.buildMoveProjectScript({ projectId: ids.sal, folderId: ids.folder }));
   assert(result.containingFolderName === "__MCPTEST__Folder", `containingFolderName=${result.containingFolderName}`);
 });
 

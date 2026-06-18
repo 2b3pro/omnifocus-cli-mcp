@@ -1,4 +1,5 @@
 import { serializeProjectFn, serializeTaskFn } from "../serializers.js";
+import type { ReorderTaskArgs } from "../../types/omnifocus.js";
 
 export function buildHoldProjectScript(idOrName: string): string {
   const argsJson = JSON.stringify({ idOrName });
@@ -39,8 +40,8 @@ export function buildSyncScript(): string {
   })()`;
 }
 
-export function buildReorderTaskScript(taskId: string, position: { top?: boolean, bottom?: boolean, before?: string, after?: string }): string {
-  const argsJson = JSON.stringify({ taskId, position });
+export function buildReorderTaskScript(args: ReorderTaskArgs): string {
+  const argsJson = JSON.stringify(args);
   return `(() => {
     var args = JSON.parse(${JSON.stringify(argsJson)});
     ${serializeTaskFn}
@@ -48,17 +49,16 @@ export function buildReorderTaskScript(taskId: string, position: { top?: boolean
     if (!task) return JSON.stringify({ notFound: true });
 
     var parent = task.parentTask || task.containingProject;
-    var taskList = parent.tasks || parent.flattenedTasks; // Simplified
 
-    if (args.position.top) {
+    if (args.top) {
       moveTasks([task], parent.beginning);
-    } else if (args.position.bottom) {
+    } else if (args.bottom) {
       moveTasks([task], parent.ending);
-    } else if (args.position.before) {
-      var target = byId(flattenedTasks, args.position.before);
+    } else if (args.before) {
+      var target = byId(flattenedTasks, args.before);
       if (target) moveTasks([task], target.before);
-    } else if (args.position.after) {
-      var target = byId(flattenedTasks, args.position.after);
+    } else if (args.after) {
+      var target = byId(flattenedTasks, args.after);
       if (target) moveTasks([task], target.after);
     }
 

@@ -189,10 +189,21 @@ describe("project script builders", () => {
 
   describe("buildMoveProjectScript", () => {
     it("should move project to folder", () => {
-      const script = buildMoveProjectScript("proj-123", "folder-456");
+      const script = buildMoveProjectScript({ projectId: "proj-123", folderId: "folder-456" });
       expect(script).toContain("proj-123");
       expect(script).toContain("folder-456");
       expect(script).toContain("moveSections");
+    });
+
+    it("should move project to root when no folder given", () => {
+      const script = buildMoveProjectScript({ projectId: "proj-123" });
+      expect(script).toContain("library.ending");
+    });
+
+    it("should resolve target folder by id-or-name", () => {
+      const script = buildMoveProjectScript({ projectId: "proj-123", folder: "Work" });
+      expect(script).toContain("Work");
+      expect(script).toContain("flattenedFolders");
     });
   });
 

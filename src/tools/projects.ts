@@ -153,7 +153,7 @@ export function registerProjectTools(server: McpServer, client: OmniFocusClient)
     },
     async ({ projectId, folderId }) => {
       try {
-        const project = await client.moveProject(projectId, folderId);
+        const project = await client.moveProject({ projectId, folderId });
         return { content: [{ type: "text" as const, text: JSON.stringify(project, null, 2) }] };
       } catch (error) {
         const { message } = formatMcpError(error);

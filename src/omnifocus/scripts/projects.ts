@@ -1,5 +1,5 @@
 import { serializeProjectFn, serializeTaskFn } from "../serializers.js";
-import type { ListProjectsArgs, CreateProjectArgs, UpdateProjectArgs, GetProjectTasksArgs } from "../../types/omnifocus.js";
+import type { ListProjectsArgs, CreateProjectArgs, UpdateProjectArgs, GetProjectTasksArgs, MoveProjectArgs } from "../../types/omnifocus.js";
 import { validateDateArgs } from "../../utils/dates.js";
 
 export function buildListProjectsScript(args: ListProjectsArgs): string {
@@ -203,8 +203,8 @@ export function buildDropProjectScript(id: string): string {
 })()`;
 }
 
-export function buildMoveProjectScript(projectId: string, folderId: string): string {
-  const argsJson = JSON.stringify({ projectId, folderId });
+export function buildMoveProjectScript(args: MoveProjectArgs): string {
+  const argsJson = JSON.stringify(args);
   return `(() => {
   var args = JSON.parse(${JSON.stringify(argsJson)});
   ${serializeProjectFn}
@@ -212,10 +212,26 @@ export function buildMoveProjectScript(projectId: string, folderId: string): str
   var project = byId(flattenedProjects, args.projectId);
   if (!project) throw new Error("Project not found: " + args.projectId);
 
-  var folder = byId(flattenedFolders, args.folderId);
-  if (!folder) throw new Error("Folder not found: " + args.folderId);
+  var folder = null;
+  if (args.folderId) {
+    folder = byId(flattenedFolders, args.folderId);
+    if (!folder) throw new Error("Folder not found: " + args.folderId);
+  } else if (args.folderName) {
+    var fn = flattenedFolders.filter(function(f) { return f.name === args.folderName; });
+    if (fn.length === 0) throw new Error("Folder not found: " + args.folderName);
+    folder = fn[0];
+  } else if (args.folder) {
+    // id-or-name convenience: resolve by ID first, then by name.
+    folder = byId(flattenedFolders, args.folder);
+    if (!folder) {
+      var fm = flattenedFolders.filter(function(f) { return f.name === args.folder; });
+      if (fm.length === 0) throw new Error("Folder not found: " + args.folder);
+      folder = fm[0];
+    }
+  }
 
-  moveSections([project], folder.ending);
+  // No folder specified → move the project to the library root.
+  moveSections([project], folder ? folder.ending : library.ending);
   return JSON.stringify(serializeProject(project));
 })()`;
 }

@@ -1,6 +1,6 @@
 {
   "name": "omnifocus-mcp-server",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "OmniFocus CLI-MCP: CLI and MCP server for OmniFocus via Omni Automation API",
   "type": "module",
   "main": "dist/index.js",

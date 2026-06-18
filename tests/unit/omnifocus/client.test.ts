@@ -235,7 +235,7 @@ describe("OmniFocusClient", () => {
   describe("moveProject", () => {
     it("should move and return project", async () => {
       mockRunOmniJSJson.mockResolvedValue(mockProject);
-      const result = await client.moveProject("proj-abc-123", "folder-2");
+      const result = await client.moveProject({ projectId: "proj-abc-123", folderId: "folder-2" });
       expect(result.id).toBe("proj-abc-123");
     });
   });
@@ -794,7 +794,7 @@ describe("OmniFocusClient", () => {
       await client.listFolders();
 
       mockRunOmniJSJson.mockResolvedValue(mockProject);
-      await client.moveProject("proj-abc-123", "folder-2");
+      await client.moveProject({ projectId: "proj-abc-123", folderId: "folder-2" });
 
       mockRunOmniJSJson.mockResolvedValue(mockProjectList);
       await client.listProjects();

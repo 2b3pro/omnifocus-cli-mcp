@@ -55,6 +55,8 @@ import type {
   CreateProjectArgs,
   UpdateProjectArgs,
   GetProjectTasksArgs,
+  MoveProjectArgs,
+  ReorderTaskArgs,
   DumpDatabaseArgs,
   CreateFolderArgs,
   UpdateFolderArgs,
@@ -294,8 +296,8 @@ export class OmniFocusClient {
     return result;
   }
 
-  async moveProject(projectId: string, folderId: string): Promise<ProjectJSON> {
-    const result = await runOmniJSJson<ProjectJSON>(buildMoveProjectScript(projectId, folderId));
+  async moveProject(args: MoveProjectArgs): Promise<ProjectJSON> {
+    const result = await runOmniJSJson<ProjectJSON>(buildMoveProjectScript(args));
     this.invalidateAfterMutation("projects:", "folders:");
     return result;
   }
@@ -456,8 +458,8 @@ export class OmniFocusClient {
     return runOmniJSJson<{ success: boolean; message: string }>(buildSyncScript());
   }
 
-  async reorderTask(taskId: string, position: { top?: boolean, bottom?: boolean, before?: string, after?: string }): Promise<TaskJSON> {
-    const result = await runOmniJSJson<TaskJSON>(buildReorderTaskScript(taskId, position));
+  async reorderTask(args: ReorderTaskArgs): Promise<TaskJSON> {
+    const result = await runOmniJSJson<TaskJSON>(buildReorderTaskScript(args));
     this.invalidateAfterMutation("tasks:");
     return result;
   }

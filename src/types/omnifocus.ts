@@ -276,6 +276,22 @@ export interface GetProjectTasksArgs {
   includeCompleted?: boolean;
 }
 
+export interface MoveProjectArgs {
+  projectId: string;
+  folderId?: string;
+  folderName?: string;
+  /** Folder id-or-name convenience (CLI `--folder`). Omit to move to root. */
+  folder?: string;
+}
+
+export interface ReorderTaskArgs {
+  taskId: string;
+  top?: boolean;
+  bottom?: boolean;
+  before?: string;
+  after?: string;
+}
+
 export interface CreateFolderArgs {
   name: string;
   parentFolderId?: string;
