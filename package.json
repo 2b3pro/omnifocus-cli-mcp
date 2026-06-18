@@ -1,6 +1,6 @@
 {
   "name": "omnifocus-mcp-server",
-  "version": "1.0.9",
+  "version": "1.1.0",
   "description": "OmniFocus CLI-MCP: CLI and MCP server for OmniFocus via Omni Automation API",
   "type": "module",
   "main": "dist/index.js",
@@ -22,7 +22,8 @@
     "dev": "tsx src/index.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:integration": "OMNIFOCUS_LIVE=1 vitest run tests/integration",
+    "test:integration": "OMNIFOCUS_LIVE=1 vitest run --config vitest.integration.config.ts",
+    "test:integration:cleanup": "tsx tests/integration/cleanup.ts",
     "test:smoke": "node scripts/smoke-test.mjs",
     "smoke:cli": "bash scripts/smoke-cli.sh",
     "lint": "tsc --noEmit"
