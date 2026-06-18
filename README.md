@@ -58,6 +58,7 @@ of --help
 - **Add Task:** `of add "Buy milk" --due today --flagged`
 - **Modify Task:** `of modify <id> --tags work,urgent --due tomorrow -f` (combine any number of flags; also `--add-tag`/`--remove-tag`, `--due-by +3d`, `--clear-due`, `--project`)
 - **Complete Task:** `of complete <id>` (alias: `of done <id>`)
+- **Tasks by Tag:** `of tag tasks NOVA` — or multiple in one call: `of tag tasks "NOVA,HITL"` (union by default; `--match all` for intersection, `--full` to include each task's tags)
 - **Search:** `of search "report"` — or filter: `of search --tag waiting --project "Q3 Launch" --flagged`
 - **Projects:** `of list projects`
 - **Today:** `of list today`
@@ -212,6 +213,7 @@ This fork expands the original MCP server into a comprehensive toolkit for OmniF
 - **Unified `query_omnifocus` Tool:** A single MCP read tool for tasks or projects with composable filters, plus `summary` (counts only) and `fields` (projection) modes to keep AI context small.
 - **Rich MCP Resources:** Read `inbox`, `today`, `flagged`, plus `project/{idOrName}` and `perspective/{name}` templates directly — no tool call required — and server-level usage instructions for AI clients.
 - **Multi-Flag Editing & Filtered Search:** `of modify` applies any combination of fields in one call (tags replace/add/remove, relative/clear dates, project move); `of search` supports project/tag/flagged/available/due filters.
+- **Multi-Tag Task Search:** `of tag tasks "a,b"` returns tasks across several tags in one call — union by default (`--match any`) or intersection (`--match all`). The same semantics are available to AI clients via `tagNames` (intersection) and `tagNamesAny` (union) on `query_omnifocus`, `list_tasks`, `get_task_count`, and `search`.
 - **Codegen Toolchain:** A metadata-driven architecture that ensures the CLI, MCP, and documentation always stay in sync, with a real drift check (`npm run codegen:check`).
 - **Agent-Optimized Docs:** Auto-generated `cli-reference-llm.md` specifically designed for token-efficient AI consumption.
 - **Safe Live Test Harness:** Integration tests create prefix-tagged items and clean up after themselves, with a standalone orphan sweep (`npm run test:integration:cleanup`).
@@ -238,7 +240,7 @@ The CLI is currently the authoritative layer for advanced macOS scripting and te
 
 | Tool | Description |
 |------|-------------|
-| `list_tasks` | List tasks with filters for status, flags, tags, projects, date ranges, and text search |
+| `list_tasks` | List tasks with filters for status, flags, tags, projects, date ranges, and text search. Tag filters: `tagNames` (all must match — intersection) and `tagNamesAny` (any must match — union) |
 | `get_task` | Get task details by ID, optionally including subtask hierarchy |
 | `create_task` | Create a task in inbox or a project, with tags, dates, and recurrence |
 | `update_task` | Update task properties (name, note, dates, flags, recurrence) |
@@ -256,7 +258,7 @@ The CLI is currently the authoritative layer for advanced macOS scripting and te
 | `get_inbox_tasks` | Get all inbox tasks |
 | `get_flagged_tasks` | Get all available flagged tasks |
 | `get_today_completed_tasks` | Get tasks completed today |
-| `get_task_count` | Count tasks matching filters — use instead of `list_tasks` when you only need a number, not the full task data |
+| `get_task_count` | Count tasks matching filters (incl. `tagNames`/`tagNamesAny`) — use instead of `list_tasks` when you only need a number, not the full task data |
 | `convert_task_to_project` | Convert a task into a project, preserving subtasks |
 | `batch_create_tasks` | Create multiple tasks at once with subtask hierarchies |
 | `batch_complete_tasks` | Complete multiple tasks at once |
@@ -309,9 +311,9 @@ The CLI is currently the authoritative layer for advanced macOS scripting and te
 
 | Tool | Description |
 |------|-------------|
-| `query_omnifocus` | Unified read query for tasks or projects with composable filters; supports `summary` (count only) and `fields` (projection) to minimize context. Prefer over `dump_database` for targeted lookups |
+| `query_omnifocus` | Unified read query for tasks or projects with composable filters (incl. `tagNames`/`tagNamesAny`); supports `summary` (count only) and `fields` (projection) to minimize context. Prefer over `dump_database` for targeted lookups |
 | `get_database_summary` | Get counts of inbox items, projects, tags, folders, and task statistics |
-| `search` | Search across all items (tasks, projects, folders, tags) by name or note |
+| `search` | Search across all items (tasks, projects, folders, tags) by name or note. Add task filters — `project`, `tag`, `tagNames`/`tagNamesAny`, `flagged`, `available`, due range — to restrict to matching tasks (query optional when filtering) |
 | `dump_database` | Dump the entire database in a single call |
 | `save_database` | Explicitly save the database to disk |
 
