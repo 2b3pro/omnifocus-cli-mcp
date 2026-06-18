@@ -26,7 +26,7 @@ describe("MCP Protocol Integration", () => {
     await cleanup();
   });
 
-  it("should list all 50 tools", async () => {
+  it("should list all 51 tools", async () => {
     const result = await client.listTools();
     const toolNames = result.tools.map((t) => t.name).sort();
 
@@ -72,6 +72,7 @@ describe("MCP Protocol Integration", () => {
       "mark_reviewed",
       "move_project",
       "move_tasks",
+      "query_omnifocus",
       "remove_task_notification",
       "save_database",
       "search",
