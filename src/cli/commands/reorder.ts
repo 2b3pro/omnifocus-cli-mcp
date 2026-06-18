@@ -22,7 +22,13 @@ export function registerReorderCommands(program: Command, client: OmniFocusClien
       
 
       const clientArgs: any = { ...{} };
-      
+      // Resolve relative-date bindArgs (e.g. dueBefore: "today") at runtime.
+      for (const __k of Object.keys(clientArgs)) {
+        if (typeof clientArgs[__k] === "string" && /^(today|tomorrow|next week|[+-]\d+[dwmy])$/.test(clientArgs[__k])) {
+          clientArgs[__k] = parseCliDate(clientArgs[__k]);
+        }
+      }
+
       // Map positional args
       clientArgs["taskId"] = positionalArgs[0];
 

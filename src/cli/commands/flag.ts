@@ -18,7 +18,13 @@ export function registerFlagCommands(program: Command, client: OmniFocusClient) 
       
 
       const clientArgs: any = { ...{"flagged":true} };
-      
+      // Resolve relative-date bindArgs (e.g. dueBefore: "today") at runtime.
+      for (const __k of Object.keys(clientArgs)) {
+        if (typeof clientArgs[__k] === "string" && /^(today|tomorrow|next week|[+-]\d+[dwmy])$/.test(clientArgs[__k])) {
+          clientArgs[__k] = parseCliDate(clientArgs[__k]);
+        }
+      }
+
       // Map positional args
       clientArgs["ids"] = positionalArgs[0];
 

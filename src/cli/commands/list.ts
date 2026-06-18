@@ -22,8 +22,14 @@ export function registerListCommands(program: Command, client: OmniFocusClient) 
       let stdinData = "";
       
 
-      const clientArgs: any = { ...{"inbox":true} };
-      
+      const clientArgs: any = { ...{"inInbox":true} };
+      // Resolve relative-date bindArgs (e.g. dueBefore: "today") at runtime.
+      for (const __k of Object.keys(clientArgs)) {
+        if (typeof clientArgs[__k] === "string" && /^(today|tomorrow|next week|[+-]\d+[dwmy])$/.test(clientArgs[__k])) {
+          clientArgs[__k] = parseCliDate(clientArgs[__k]);
+        }
+      }
+
       // Map positional args
       
 
@@ -53,8 +59,14 @@ export function registerListCommands(program: Command, client: OmniFocusClient) 
       let stdinData = "";
       
 
-      const clientArgs: any = { ...{"dueBefore":"today","available":true} };
-      
+      const clientArgs: any = { ...{"dueBefore":"today","completed":false} };
+      // Resolve relative-date bindArgs (e.g. dueBefore: "today") at runtime.
+      for (const __k of Object.keys(clientArgs)) {
+        if (typeof clientArgs[__k] === "string" && /^(today|tomorrow|next week|[+-]\d+[dwmy])$/.test(clientArgs[__k])) {
+          clientArgs[__k] = parseCliDate(clientArgs[__k]);
+        }
+      }
+
       // Map positional args
       
 
@@ -85,7 +97,13 @@ export function registerListCommands(program: Command, client: OmniFocusClient) 
       
 
       const clientArgs: any = { ...{"flagged":true} };
-      
+      // Resolve relative-date bindArgs (e.g. dueBefore: "today") at runtime.
+      for (const __k of Object.keys(clientArgs)) {
+        if (typeof clientArgs[__k] === "string" && /^(today|tomorrow|next week|[+-]\d+[dwmy])$/.test(clientArgs[__k])) {
+          clientArgs[__k] = parseCliDate(clientArgs[__k]);
+        }
+      }
+
       // Map positional args
       
 
@@ -113,7 +131,13 @@ export function registerListCommands(program: Command, client: OmniFocusClient) 
       
 
       const clientArgs: any = { ...{} };
-      
+      // Resolve relative-date bindArgs (e.g. dueBefore: "today") at runtime.
+      for (const __k of Object.keys(clientArgs)) {
+        if (typeof clientArgs[__k] === "string" && /^(today|tomorrow|next week|[+-]\d+[dwmy])$/.test(clientArgs[__k])) {
+          clientArgs[__k] = parseCliDate(clientArgs[__k]);
+        }
+      }
+
       // Map positional args
       
 
@@ -144,7 +168,13 @@ export function registerListCommands(program: Command, client: OmniFocusClient) 
       
 
       const clientArgs: any = { ...{} };
-      
+      // Resolve relative-date bindArgs (e.g. dueBefore: "today") at runtime.
+      for (const __k of Object.keys(clientArgs)) {
+        if (typeof clientArgs[__k] === "string" && /^(today|tomorrow|next week|[+-]\d+[dwmy])$/.test(clientArgs[__k])) {
+          clientArgs[__k] = parseCliDate(clientArgs[__k]);
+        }
+      }
+
       // Map positional args
       
 
@@ -178,7 +208,13 @@ export function registerListCommands(program: Command, client: OmniFocusClient) 
       
 
       const clientArgs: any = { ...{} };
-      
+      // Resolve relative-date bindArgs (e.g. dueBefore: "today") at runtime.
+      for (const __k of Object.keys(clientArgs)) {
+        if (typeof clientArgs[__k] === "string" && /^(today|tomorrow|next week|[+-]\d+[dwmy])$/.test(clientArgs[__k])) {
+          clientArgs[__k] = parseCliDate(clientArgs[__k]);
+        }
+      }
+
       // Map positional args
       
 
@@ -208,7 +244,13 @@ export function registerListCommands(program: Command, client: OmniFocusClient) 
       
 
       const clientArgs: any = { ...{} };
-      
+      // Resolve relative-date bindArgs (e.g. dueBefore: "today") at runtime.
+      for (const __k of Object.keys(clientArgs)) {
+        if (typeof clientArgs[__k] === "string" && /^(today|tomorrow|next week|[+-]\d+[dwmy])$/.test(clientArgs[__k])) {
+          clientArgs[__k] = parseCliDate(clientArgs[__k]);
+        }
+      }
+
       // Map positional args
       
 

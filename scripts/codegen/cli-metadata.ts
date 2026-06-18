@@ -77,7 +77,7 @@ export const CLI_METADATA: Partial<Record<keyof OmniFocusClient, MethodMeta>> = 
           { long: "brief", type: "boolean", default: true, description: "Brief output" },
           { long: "full", type: "boolean", description: "Full output" },
         ],
-        bindArgs: { inbox: true },
+        bindArgs: { inInbox: true },
         outputShape: "task[]",
       },
       {
@@ -90,7 +90,7 @@ export const CLI_METADATA: Partial<Record<keyof OmniFocusClient, MethodMeta>> = 
           { long: "brief", type: "boolean", default: true, description: "Brief output" },
           { long: "full", type: "boolean", description: "Full output" },
         ],
-        bindArgs: { dueBefore: "today", available: true },
+        bindArgs: { dueBefore: "today", completed: false },
         outputShape: "task[]",
       },
       {

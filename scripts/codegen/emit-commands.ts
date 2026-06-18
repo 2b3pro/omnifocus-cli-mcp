@@ -135,7 +135,13 @@ export function register${capitalize(group)}Commands(program: Command, client: O
       ` : ""}
 
       const clientArgs: any = { ...${JSON.stringify(cmd.bindArgs || {})} };
-      
+      // Resolve relative-date bindArgs (e.g. dueBefore: "today") at runtime.
+      for (const __k of Object.keys(clientArgs)) {
+        if (typeof clientArgs[__k] === "string" && /^(today|tomorrow|next week|[+-]\\d+[dwmy])$/.test(clientArgs[__k])) {
+          clientArgs[__k] = parseCliDate(clientArgs[__k]);
+        }
+      }
+
       // Map positional args
       ${cmd.positional?.map((pos, i) => {
         if (pos.name.endsWith("...")) {
