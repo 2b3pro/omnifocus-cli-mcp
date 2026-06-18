@@ -9,6 +9,11 @@ export class Cache {
 
   constructor(private maxSize = 500) {
     this.sweepInterval = setInterval(() => this.sweep(), 5 * 60 * 1000);
+    // Don't let the periodic sweep keep the Node event loop alive. Otherwise
+    // the `of` CLI prints its result and then hangs forever waiting on this
+    // timer (the success path has no process.exit()). The long-lived MCP
+    // server stays alive via its stdio transport, so unref is safe there too.
+    this.sweepInterval.unref?.();
   }
 
   get<T>(key: string): T | undefined {

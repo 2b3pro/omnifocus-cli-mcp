@@ -21,7 +21,7 @@ export function registerDeleteCommands(program: Command, client: OmniFocusClient
       const clientArgs: any = { ...{} };
       
       // Map positional args
-      clientArgs["ids"] = positionalArgs.slice(0);
+      clientArgs["ids"] = positionalArgs[0];
 
       // Map flags
       

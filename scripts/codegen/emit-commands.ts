@@ -139,7 +139,10 @@ export function register${capitalize(group)}Commands(program: Command, client: O
       // Map positional args
       ${cmd.positional?.map((pos, i) => {
         if (pos.name.endsWith("...")) {
-          return `clientArgs["${pos.name.replace("...", "")}"] = positionalArgs.slice(${i});`;
+          // Commander passes a variadic <ids...> as a single array argument,
+          // so it is positionalArgs[i] — NOT positionalArgs.slice(i), which
+          // would wrap it into a nested array and break every id-list command.
+          return `clientArgs["${pos.name.replace("...", "")}"] = positionalArgs[${i}];`;
         }
         return `clientArgs["${pos.name}"] = positionalArgs[${i}];`;
       }).join("\n      ") || ""}
