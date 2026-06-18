@@ -57,7 +57,7 @@ function generateGroupFile(group: string, commands: CommandMeta[]): string {
 import { Command } from "commander";
 import { OmniFocusClient } from "../../omnifocus/client.js";
 import { formatOutput } from "../output.js";
-import { parseCliDate } from "../dates-cli.js";
+import { parseCliDate, parseCsv } from "../dates-cli.js";
 
 export function register${capitalize(group)}Commands(program: Command, client: OmniFocusClient) {
 `;
@@ -147,10 +147,21 @@ export function register${capitalize(group)}Commands(program: Command, client: O
       // Map flags
       ${cmd.flags?.map(flag => {
         const camelName = flag.long.replace(/-([a-z])/g, g => g[1].toUpperCase());
-        if (flag.type === "date") {
-          return `if (options.${camelName}) clientArgs["${flag.long}"] = parseCliDate(options.${camelName});`;
+        const key = JSON.stringify(flag.argKey ?? flag.long);
+        // Boolean flags with a fixed bindValue (e.g. --unflag → flagged:false, --clear-due → dueDate:null)
+        if (flag.bindValue !== undefined) {
+          return `if (options.${camelName} !== undefined) clientArgs[${key}] = ${JSON.stringify(flag.bindValue)};`;
         }
-        return `if (options.${camelName} !== undefined) clientArgs["${flag.long}"] = options.${camelName};`;
+        if (flag.type === "date") {
+          return `if (options.${camelName}) clientArgs[${key}] = parseCliDate(options.${camelName});`;
+        }
+        if (flag.parser === "parseCsv") {
+          return `if (options.${camelName} !== undefined) clientArgs[${key}] = parseCsv(options.${camelName});`;
+        }
+        if (flag.parser === "parseInt") {
+          return `if (options.${camelName} !== undefined) clientArgs[${key}] = parseInt(options.${camelName}, 10);`;
+        }
+        return `if (options.${camelName} !== undefined) clientArgs[${key}] = options.${camelName};`;
       }).join("\n      ") || ""}
 
       ${cmd.name === "add batch" ? `

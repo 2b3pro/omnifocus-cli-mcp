@@ -152,7 +152,11 @@ export interface CreateTaskArgs {
   completedByChildren?: boolean;
   projectId?: string;
   projectName?: string;
+  /** Project id-or-name convenience (CLI `--project`); resolved to a project. */
+  project?: string;
   tags?: string[];
+  /** Single tag convenience (CLI `--tag`); merged with `tags`. */
+  tag?: string;
   repetitionRule?: {
     ruleString: string;
     method: "fixed" | "startAfterCompletion" | "dueAfterCompletion";
@@ -166,9 +170,23 @@ export interface UpdateTaskArgs {
   flagged?: boolean;
   deferDate?: string | null;
   dueDate?: string | null;
+  /** Adjust due date relative to its current value, e.g. `+3d`, `-1w`. */
+  dueBy?: string;
+  /** Adjust defer date relative to its current value, e.g. `+3d`, `-1w`. */
+  deferBy?: string;
   estimatedMinutes?: number | null;
   sequential?: boolean;
   completedByChildren?: boolean;
+  /** Project id-or-name (CLI `--project`); moves the task to that project. */
+  project?: string;
+  /** Replace the task's tags entirely with this set. */
+  tags?: string[];
+  /** Single tag convenience (CLI `--tag`); merged with `tags` (replace mode). */
+  tag?: string;
+  /** Add these tags to the task's existing tags. */
+  addTags?: string[];
+  /** Remove these tags from the task. */
+  removeTags?: string[];
   repetitionRule?: {
     ruleString: string;
     method: "fixed" | "startAfterCompletion" | "dueAfterCompletion";
@@ -221,6 +239,8 @@ export interface CreateProjectArgs {
   note?: string;
   folderId?: string;
   folderName?: string;
+  /** Folder id-or-name convenience (CLI `--folder`). */
+  folder?: string;
   sequential?: boolean;
   singleActionList?: boolean;
   completedByChildren?: boolean;
@@ -228,6 +248,8 @@ export interface CreateProjectArgs {
   dueDate?: string;
   flagged?: boolean;
   tags?: string[];
+  /** Single tag convenience (CLI `--tag`); merged with `tags`. */
+  tag?: string;
   reviewInterval?: { steps: number; unit: string };
 }
 
@@ -235,13 +257,17 @@ export interface UpdateProjectArgs {
   id: string;
   name?: string;
   note?: string;
-  status?: "active" | "onHold" | "done" | "dropped";
+  status?: "active" | "onHold" | "on-hold" | "done" | "dropped";
   sequential?: boolean;
   singleActionList?: boolean;
   completedByChildren?: boolean;
   deferDate?: string | null;
   dueDate?: string | null;
   flagged?: boolean;
+  /** Replace the project's tags entirely with this set. */
+  tags?: string[];
+  /** Single tag convenience (CLI `--tag`); merged with `tags` (replace mode). */
+  tag?: string;
   reviewInterval?: { steps: number; unit: string };
 }
 

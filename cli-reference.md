@@ -187,7 +187,7 @@ Create projects and tasks from an indented outline via stdin.
 
 ### `of modify`
 
-Update an existing task.
+Update an existing task. Combine any number of flags in one call.
 
 **Aliases:** `mod`
 
@@ -201,13 +201,32 @@ Update an existing task.
 - `--note`, `-n` (string): Set task note
 - `--due`, `-d` (date): Set due date
 - `--due-by` (string): Adjust due date relatively (+3d, -1w)
+- `--clear-due` (boolean): Clear the due date
 - `--defer` (date): Set defer date
 - `--defer-by` (string): Adjust defer date relatively
+- `--clear-defer` (boolean): Clear the defer date
 - `--flag`, `-f` (boolean): Set flagged
 - `--unflag` (boolean): Remove flag
-- `--tag`, `-t` (string): Set primary tag
-- `--project`, `-p` (string): Move to project
+- `--tag`, `-t` (string): Replace tags with this single tag
+- `--tags` (string[]): Replace all tags (comma-sep)
+- `--add-tag` (string[]): Add tags (comma-sep)
+- `--remove-tag` (string[]): Remove tags (comma-sep)
+- `--project`, `-p` (string): Move to project (name or ID)
 - `--estimate`, `-e` (number): Set estimated minutes
+
+**Examples:**
+
+```bash
+of modify abc123 --name "New name" --due tomorrow -f
+```
+
+```bash
+of mod abc123 --tags work,urgent --project Inbox
+```
+
+```bash
+of mod abc123 --add-tag waiting --remove-tag urgent --due-by +3d
+```
 
 ### `of flag`
 
@@ -280,13 +299,13 @@ Create a new project.
 
 **Options:**
 
-- `--folder`, `-f` (string): Add to specific folder
+- `--folder`, `-f` (string): Add to specific folder (name or ID)
 - `--note`, `-n` (string): Project note
 - `--due`, `-d` (date): Due date
 - `--defer` (date): Defer date
 - `--flagged` (boolean): Mark as flagged
 - `--tag`, `-t` (string): Add primary tag
-- `--tasks` (string[]): Initial tasks (comma-sep)
+- `--tags` (string[]): Add multiple tags (comma-sep)
 - `--sequential` (boolean): Sequential project
 - `--parallel` (boolean): Parallel project
 - `--single-actions` (boolean): Single action list
@@ -311,7 +330,8 @@ Modify project properties.
 - `--clear-defer` (boolean): Clear defer date
 - `--flag`, `-f` (boolean): Flag project
 - `--unflag` (boolean): Unflag project
-- `--tag`, `-t` (string): Set primary tag
+- `--tag`, `-t` (string): Replace tags with this single tag
+- `--tags` (string[]): Replace all tags (comma-sep)
 - `--status` (string): Set status (active, on-hold, done, dropped)
 - `--sequential` (boolean): Set to sequential
 - `--parallel` (boolean): Set to parallel
@@ -401,9 +421,8 @@ Modify an existing folder.
 **Options:**
 
 - `--name` (string): Rename folder
-- `--note` (string): Set folder note
-- `--hidden` (boolean): Hide folder
-- `--visible` (boolean): Show folder
+- `--hidden` (boolean): Hide (drop) folder
+- `--visible` (boolean): Show (activate) folder
 
 ### `of tag add`
 
@@ -433,8 +452,8 @@ Modify an existing tag.
 **Options:**
 
 - `--name` (string): Rename tag
-- `--hidden` (boolean): Hide tag
-- `--visible` (boolean): Show tag
+- `--hidden` (boolean): Hide (drop) tag
+- `--visible` (boolean): Show (activate) tag
 - `--allows-next` (boolean): Enable next action
 - `--no-allows-next` (boolean): Disable next action
 

@@ -2,7 +2,7 @@
 import { Command } from "commander";
 import { OmniFocusClient } from "../../omnifocus/client.js";
 import { formatOutput } from "../output.js";
-import { parseCliDate } from "../dates-cli.js";
+import { parseCliDate, parseCsv } from "../dates-cli.js";
 
 export function registerQuickCommands(program: Command, client: OmniFocusClient) {
 
@@ -26,7 +26,7 @@ export function registerQuickCommands(program: Command, client: OmniFocusClient)
       clientArgs["name"] = positionalArgs[0];
 
       // Map flags
-      if (options.due) clientArgs["due"] = parseCliDate(options.due);
+      if (options.due) clientArgs["dueDate"] = parseCliDate(options.due);
       if (options.flagged !== undefined) clientArgs["flagged"] = options.flagged;
 
       

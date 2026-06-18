@@ -67,7 +67,7 @@ FLAGS: --folder|-f, --sequential
 ### `of modify`
 ALIAS: `mod`
 ARGS: id!
-FLAGS: --name, --note|-n, --due|-d, --due-by, --defer, --defer-by, --flag|-f, --unflag, --tag|-t, --project|-p, --estimate|-e
+FLAGS: --name, --note|-n, --due|-d, --due-by, --clear-due, --defer, --defer-by, --clear-defer, --flag|-f, --unflag, --tag|-t, --tags, --add-tag, --remove-tag, --project|-p, --estimate|-e
 
 ### `of flag`
 ARGS: ids...!
@@ -93,12 +93,12 @@ FLAGS: --top, --bottom, --before, --after
 ### `of add project`
 ALIAS: `add p`
 ARGS: name!
-FLAGS: --folder|-f, --note|-n, --due|-d, --defer, --flagged, --tag|-t, --tasks, --sequential, --parallel, --single-actions
+FLAGS: --folder|-f, --note|-n, --due|-d, --defer, --flagged, --tag|-t, --tags, --sequential, --parallel, --single-actions
 
 ### `of project modify`
 ALIAS: `proj mod`
 ARGS: id!
-FLAGS: --name, --note|-n, --due|-d, --defer, --clear-due, --clear-defer, --flag|-f, --unflag, --tag|-t, --status, --sequential, --parallel
+FLAGS: --name, --note|-n, --due|-d, --defer, --clear-due, --clear-defer, --flag|-f, --unflag, --tag|-t, --tags, --status, --sequential, --parallel
 
 ### `of project complete`
 ALIAS: `proj done`
@@ -130,7 +130,7 @@ FLAGS: --parent|-p
 ### `of folder modify`
 ALIAS: `folder mod`
 ARGS: id!
-FLAGS: --name, --note, --hidden, --visible
+FLAGS: --name, --hidden, --visible
 
 ### `of tag add`
 ALIAS: `tag create`

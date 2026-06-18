@@ -81,6 +81,13 @@ export function buildCreateProjectScript(args: CreateProjectArgs): string {
     var folders = flattenedFolders.filter(function(f) { return f.name === args.folderName; });
     if (folders.length === 0) throw new Error("Folder not found: " + args.folderName);
     folder = folders[0];
+  } else if (args.folder) {
+    folder = byId(flattenedFolders, args.folder);
+    if (!folder) {
+      var fmatches = flattenedFolders.filter(function(f) { return f.name === args.folder; });
+      if (fmatches.length === 0) throw new Error("Folder not found: " + args.folder);
+      folder = fmatches[0];
+    }
   }
 
   var project = new Project(args.name, folder ? folder.ending : library.ending);
@@ -101,8 +108,10 @@ export function buildCreateProjectScript(args: CreateProjectArgs): string {
     project.reviewInterval = ri;
   }
 
-  if (args.tags && args.tags.length > 0) {
-    args.tags.forEach(function(tagName) {
+  var projTagNames = (args.tags || []).slice();
+  if (args.tag && projTagNames.indexOf(args.tag) === -1) projTagNames.push(args.tag);
+  if (projTagNames.length > 0) {
+    projTagNames.forEach(function(tagName) {
       var matches = flattenedTags.filter(function(t) { return t.name === tagName; });
       if (matches.length > 0) {
         project.task.addTag(matches[0]);
@@ -138,7 +147,7 @@ export function buildUpdateProjectScript(args: UpdateProjectArgs): string {
   if (args.dueDate !== undefined) project.dueDate = args.dueDate ? new Date(args.dueDate) : null;
 
   if (args.status === "active") project.status = Project.Status.Active;
-  else if (args.status === "onHold") project.status = Project.Status.OnHold;
+  else if (args.status === "onHold" || args.status === "on-hold") project.status = Project.Status.OnHold;
   else if (args.status === "done") project.status = Project.Status.Done;
   else if (args.status === "dropped") project.status = Project.Status.Dropped;
 
@@ -148,6 +157,20 @@ export function buildUpdateProjectScript(args: UpdateProjectArgs): string {
     var u = args.reviewInterval.unit;
     ri.unit = u.endsWith("s") ? u : u + "s";
     project.reviewInterval = ri;
+  }
+
+  // Replace the project's tags (applied to the project's representative task).
+  var projUpdTags = (args.tags || []).slice();
+  if (args.tag !== undefined && projUpdTags.indexOf(args.tag) === -1) projUpdTags.push(args.tag);
+  if (args.tags !== undefined || args.tag !== undefined) {
+    var projTagMap = {};
+    flattenedTags.forEach(function(t) { projTagMap[t.name] = t; });
+    project.task.clearTags();
+    projUpdTags.forEach(function(name) {
+      var tg = projTagMap[name];
+      if (!tg) { tg = new Tag(name); tags.push(tg); projTagMap[name] = tg; }
+      project.task.addTag(tg);
+    });
   }
 
   return JSON.stringify(serializeProject(project));

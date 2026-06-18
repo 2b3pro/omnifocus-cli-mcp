@@ -2,7 +2,7 @@
 import { Command } from "commander";
 import { OmniFocusClient } from "../../omnifocus/client.js";
 import { formatOutput } from "../output.js";
-import { parseCliDate } from "../dates-cli.js";
+import { parseCliDate, parseCsv } from "../dates-cli.js";
 
 export function registerProjectCommands(program: Command, client: OmniFocusClient) {
   const project = program.command("project").description("project commands");
@@ -19,7 +19,8 @@ export function registerProjectCommands(program: Command, client: OmniFocusClien
     .option("--clear-defer", "Clear defer date")
     .option("-f, --flag", "Flag project")
     .option("--unflag", "Unflag project")
-    .option("-t, --tag <string>", "Set primary tag")
+    .option("-t, --tag <string>", "Replace tags with this single tag")
+    .option("--tags <string[]>", "Replace all tags (comma-sep)")
     .option("--status <string>", "Set status (active, on-hold, done, dropped)")
     .option("--sequential", "Set to sequential")
     .option("--parallel", "Set to parallel")
@@ -39,16 +40,17 @@ export function registerProjectCommands(program: Command, client: OmniFocusClien
       // Map flags
       if (options.name !== undefined) clientArgs["name"] = options.name;
       if (options.note !== undefined) clientArgs["note"] = options.note;
-      if (options.due) clientArgs["due"] = parseCliDate(options.due);
-      if (options.defer) clientArgs["defer"] = parseCliDate(options.defer);
-      if (options.clearDue !== undefined) clientArgs["clear-due"] = options.clearDue;
-      if (options.clearDefer !== undefined) clientArgs["clear-defer"] = options.clearDefer;
-      if (options.flag !== undefined) clientArgs["flag"] = options.flag;
-      if (options.unflag !== undefined) clientArgs["unflag"] = options.unflag;
+      if (options.due) clientArgs["dueDate"] = parseCliDate(options.due);
+      if (options.defer) clientArgs["deferDate"] = parseCliDate(options.defer);
+      if (options.clearDue !== undefined) clientArgs["dueDate"] = null;
+      if (options.clearDefer !== undefined) clientArgs["deferDate"] = null;
+      if (options.flag !== undefined) clientArgs["flagged"] = true;
+      if (options.unflag !== undefined) clientArgs["flagged"] = false;
       if (options.tag !== undefined) clientArgs["tag"] = options.tag;
+      if (options.tags !== undefined) clientArgs["tags"] = parseCsv(options.tags);
       if (options.status !== undefined) clientArgs["status"] = options.status;
       if (options.sequential !== undefined) clientArgs["sequential"] = options.sequential;
-      if (options.parallel !== undefined) clientArgs["parallel"] = options.parallel;
+      if (options.parallel !== undefined) clientArgs["sequential"] = false;
 
       
       const result = await (client as any).updateProject(clientArgs);

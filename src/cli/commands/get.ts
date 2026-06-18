@@ -2,7 +2,7 @@
 import { Command } from "commander";
 import { OmniFocusClient } from "../../omnifocus/client.js";
 import { formatOutput } from "../output.js";
-import { parseCliDate } from "../dates-cli.js";
+import { parseCliDate, parseCsv } from "../dates-cli.js";
 
 export function registerGetCommands(program: Command, client: OmniFocusClient) {
   const get = program.command("get").description("get commands");

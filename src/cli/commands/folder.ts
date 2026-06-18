@@ -2,7 +2,7 @@
 import { Command } from "commander";
 import { OmniFocusClient } from "../../omnifocus/client.js";
 import { formatOutput } from "../output.js";
-import { parseCliDate } from "../dates-cli.js";
+import { parseCliDate, parseCsv } from "../dates-cli.js";
 
 export function registerFolderCommands(program: Command, client: OmniFocusClient) {
   const folder = program.command("folder").description("folder commands");
@@ -26,7 +26,7 @@ export function registerFolderCommands(program: Command, client: OmniFocusClient
       clientArgs["name"] = positionalArgs[0];
 
       // Map flags
-      if (options.parent !== undefined) clientArgs["parent"] = options.parent;
+      if (options.parent !== undefined) clientArgs["parentFolderId"] = options.parent;
 
       
       const result = await (client as any).createFolder(clientArgs);
@@ -39,9 +39,8 @@ export function registerFolderCommands(program: Command, client: OmniFocusClient
     .alias("folder mod")
     .argument("<id>", "Folder ID")
     .option("--name <string>", "Rename folder")
-    .option("--note <string>", "Set folder note")
-    .option("--hidden", "Hide folder")
-    .option("--visible", "Show folder")
+    .option("--hidden", "Hide (drop) folder")
+    .option("--visible", "Show (activate) folder")
     .action(async (...args) => {
       const options = args[args.length - 2];
       const command = args[args.length - 1];
@@ -57,9 +56,8 @@ export function registerFolderCommands(program: Command, client: OmniFocusClient
 
       // Map flags
       if (options.name !== undefined) clientArgs["name"] = options.name;
-      if (options.note !== undefined) clientArgs["note"] = options.note;
-      if (options.hidden !== undefined) clientArgs["hidden"] = options.hidden;
-      if (options.visible !== undefined) clientArgs["visible"] = options.visible;
+      if (options.hidden !== undefined) clientArgs["status"] = "dropped";
+      if (options.visible !== undefined) clientArgs["status"] = "active";
 
       
       const result = await (client as any).updateFolder(clientArgs);

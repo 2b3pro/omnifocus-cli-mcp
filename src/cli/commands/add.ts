@@ -2,7 +2,7 @@
 import { Command } from "commander";
 import { OmniFocusClient } from "../../omnifocus/client.js";
 import { formatOutput } from "../output.js";
-import { parseCliDate } from "../dates-cli.js";
+import { parseCliDate, parseCsv } from "../dates-cli.js";
 
 export function registerAddCommands(program: Command, client: OmniFocusClient) {
   const add = program.command("add").description("add commands");
@@ -36,12 +36,12 @@ export function registerAddCommands(program: Command, client: OmniFocusClient) {
       // Map flags
       if (options.project !== undefined) clientArgs["project"] = options.project;
       if (options.note !== undefined) clientArgs["note"] = options.note;
-      if (options.due) clientArgs["due"] = parseCliDate(options.due);
-      if (options.defer) clientArgs["defer"] = parseCliDate(options.defer);
+      if (options.due) clientArgs["dueDate"] = parseCliDate(options.due);
+      if (options.defer) clientArgs["deferDate"] = parseCliDate(options.defer);
       if (options.flagged !== undefined) clientArgs["flagged"] = options.flagged;
       if (options.tag !== undefined) clientArgs["tag"] = options.tag;
-      if (options.tags !== undefined) clientArgs["tags"] = options.tags;
-      if (options.estimate !== undefined) clientArgs["estimate"] = options.estimate;
+      if (options.tags !== undefined) clientArgs["tags"] = parseCsv(options.tags);
+      if (options.estimate !== undefined) clientArgs["estimatedMinutes"] = parseInt(options.estimate, 10);
 
       
       const result = await (client as any).createTask(clientArgs);
@@ -91,13 +91,13 @@ export function registerAddCommands(program: Command, client: OmniFocusClient) {
     .description("Create a new project.")
     .alias("add p")
     .argument("<name>", "Project name")
-    .option("-f, --folder <string>", "Add to specific folder")
+    .option("-f, --folder <string>", "Add to specific folder (name or ID)")
     .option("-n, --note <string>", "Project note")
     .option("-d, --due <date>", "Due date")
     .option("--defer <date>", "Defer date")
     .option("--flagged", "Mark as flagged")
     .option("-t, --tag <string>", "Add primary tag")
-    .option("--tasks <string[]>", "Initial tasks (comma-sep)")
+    .option("--tags <string[]>", "Add multiple tags (comma-sep)")
     .option("--sequential", "Sequential project")
     .option("--parallel", "Parallel project")
     .option("--single-actions", "Single action list")
@@ -117,14 +117,14 @@ export function registerAddCommands(program: Command, client: OmniFocusClient) {
       // Map flags
       if (options.folder !== undefined) clientArgs["folder"] = options.folder;
       if (options.note !== undefined) clientArgs["note"] = options.note;
-      if (options.due) clientArgs["due"] = parseCliDate(options.due);
-      if (options.defer) clientArgs["defer"] = parseCliDate(options.defer);
+      if (options.due) clientArgs["dueDate"] = parseCliDate(options.due);
+      if (options.defer) clientArgs["deferDate"] = parseCliDate(options.defer);
       if (options.flagged !== undefined) clientArgs["flagged"] = options.flagged;
       if (options.tag !== undefined) clientArgs["tag"] = options.tag;
-      if (options.tasks !== undefined) clientArgs["tasks"] = options.tasks;
+      if (options.tags !== undefined) clientArgs["tags"] = parseCsv(options.tags);
       if (options.sequential !== undefined) clientArgs["sequential"] = options.sequential;
-      if (options.parallel !== undefined) clientArgs["parallel"] = options.parallel;
-      if (options.singleActions !== undefined) clientArgs["single-actions"] = options.singleActions;
+      if (options.parallel !== undefined) clientArgs["sequential"] = false;
+      if (options.singleActions !== undefined) clientArgs["singleActionList"] = options.singleActions;
 
       
       const result = await (client as any).createProject(clientArgs);

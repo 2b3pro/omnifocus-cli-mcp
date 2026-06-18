@@ -2,24 +2,29 @@
 import { Command } from "commander";
 import { OmniFocusClient } from "../../omnifocus/client.js";
 import { formatOutput } from "../output.js";
-import { parseCliDate } from "../dates-cli.js";
+import { parseCliDate, parseCsv } from "../dates-cli.js";
 
 export function registerModifyCommands(program: Command, client: OmniFocusClient) {
 
   program.command("modify")
-    .description("Update an existing task.")
+    .description("Update an existing task. Combine any number of flags in one call.")
     .alias("mod")
     .argument("<id>", "Task ID")
     .option("--name <string>", "Set task name")
     .option("-n, --note <string>", "Set task note")
     .option("-d, --due <date>", "Set due date")
     .option("--due-by <string>", "Adjust due date relatively (+3d, -1w)")
+    .option("--clear-due", "Clear the due date")
     .option("--defer <date>", "Set defer date")
     .option("--defer-by <string>", "Adjust defer date relatively")
+    .option("--clear-defer", "Clear the defer date")
     .option("-f, --flag", "Set flagged")
     .option("--unflag", "Remove flag")
-    .option("-t, --tag <string>", "Set primary tag")
-    .option("-p, --project <string>", "Move to project")
+    .option("-t, --tag <string>", "Replace tags with this single tag")
+    .option("--tags <string[]>", "Replace all tags (comma-sep)")
+    .option("--add-tag <string[]>", "Add tags (comma-sep)")
+    .option("--remove-tag <string[]>", "Remove tags (comma-sep)")
+    .option("-p, --project <string>", "Move to project (name or ID)")
     .option("-e, --estimate <number>", "Set estimated minutes")
     .action(async (...args) => {
       const options = args[args.length - 2];
@@ -37,15 +42,20 @@ export function registerModifyCommands(program: Command, client: OmniFocusClient
       // Map flags
       if (options.name !== undefined) clientArgs["name"] = options.name;
       if (options.note !== undefined) clientArgs["note"] = options.note;
-      if (options.due) clientArgs["due"] = parseCliDate(options.due);
-      if (options.dueBy !== undefined) clientArgs["due-by"] = options.dueBy;
-      if (options.defer) clientArgs["defer"] = parseCliDate(options.defer);
-      if (options.deferBy !== undefined) clientArgs["defer-by"] = options.deferBy;
-      if (options.flag !== undefined) clientArgs["flag"] = options.flag;
-      if (options.unflag !== undefined) clientArgs["unflag"] = options.unflag;
+      if (options.due) clientArgs["dueDate"] = parseCliDate(options.due);
+      if (options.dueBy !== undefined) clientArgs["dueBy"] = options.dueBy;
+      if (options.clearDue !== undefined) clientArgs["dueDate"] = null;
+      if (options.defer) clientArgs["deferDate"] = parseCliDate(options.defer);
+      if (options.deferBy !== undefined) clientArgs["deferBy"] = options.deferBy;
+      if (options.clearDefer !== undefined) clientArgs["deferDate"] = null;
+      if (options.flag !== undefined) clientArgs["flagged"] = true;
+      if (options.unflag !== undefined) clientArgs["flagged"] = false;
       if (options.tag !== undefined) clientArgs["tag"] = options.tag;
+      if (options.tags !== undefined) clientArgs["tags"] = parseCsv(options.tags);
+      if (options.addTag !== undefined) clientArgs["addTags"] = parseCsv(options.addTag);
+      if (options.removeTag !== undefined) clientArgs["removeTags"] = parseCsv(options.removeTag);
       if (options.project !== undefined) clientArgs["project"] = options.project;
-      if (options.estimate !== undefined) clientArgs["estimate"] = options.estimate;
+      if (options.estimate !== undefined) clientArgs["estimatedMinutes"] = parseInt(options.estimate, 10);
 
       
       const result = await (client as any).updateTask(clientArgs);

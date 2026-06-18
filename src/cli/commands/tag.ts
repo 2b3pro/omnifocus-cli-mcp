@@ -2,7 +2,7 @@
 import { Command } from "commander";
 import { OmniFocusClient } from "../../omnifocus/client.js";
 import { formatOutput } from "../output.js";
-import { parseCliDate } from "../dates-cli.js";
+import { parseCliDate, parseCsv } from "../dates-cli.js";
 
 export function registerTagCommands(program: Command, client: OmniFocusClient) {
   const tag = program.command("tag").description("tag commands");
@@ -56,8 +56,8 @@ export function registerTagCommands(program: Command, client: OmniFocusClient) {
       clientArgs["name"] = positionalArgs[0];
 
       // Map flags
-      if (options.parent !== undefined) clientArgs["parent"] = options.parent;
-      if (options.noNextAction !== undefined) clientArgs["no-next-action"] = options.noNextAction;
+      if (options.parent !== undefined) clientArgs["parentTagId"] = options.parent;
+      if (options.noNextAction !== undefined) clientArgs["allowsNextAction"] = false;
 
       
       const result = await (client as any).createTag(clientArgs);
@@ -70,8 +70,8 @@ export function registerTagCommands(program: Command, client: OmniFocusClient) {
     .alias("tag mod")
     .argument("<id>", "Tag ID")
     .option("--name <string>", "Rename tag")
-    .option("--hidden", "Hide tag")
-    .option("--visible", "Show tag")
+    .option("--hidden", "Hide (drop) tag")
+    .option("--visible", "Show (activate) tag")
     .option("--allows-next", "Enable next action")
     .option("--no-allows-next", "Disable next action")
     .action(async (...args) => {
@@ -89,10 +89,10 @@ export function registerTagCommands(program: Command, client: OmniFocusClient) {
 
       // Map flags
       if (options.name !== undefined) clientArgs["name"] = options.name;
-      if (options.hidden !== undefined) clientArgs["hidden"] = options.hidden;
-      if (options.visible !== undefined) clientArgs["visible"] = options.visible;
-      if (options.allowsNext !== undefined) clientArgs["allows-next"] = options.allowsNext;
-      if (options.noAllowsNext !== undefined) clientArgs["no-allows-next"] = options.noAllowsNext;
+      if (options.hidden !== undefined) clientArgs["status"] = "dropped";
+      if (options.visible !== undefined) clientArgs["status"] = "active";
+      if (options.allowsNext !== undefined) clientArgs["allowsNextAction"] = true;
+      if (options.noAllowsNext !== undefined) clientArgs["allowsNextAction"] = false;
 
       
       const result = await (client as any).updateTag(clientArgs);

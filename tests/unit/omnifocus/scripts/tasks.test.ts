@@ -260,6 +260,19 @@ describe("task script builders", () => {
       // Should still produce valid script (tags array embedded but empty)
       expect(script).toContain("JSON.parse");
     });
+
+    it("should resolve project by id-or-name via project convenience field", () => {
+      const script = buildCreateTaskScript({ name: "Test", project: "Errands" });
+      expect(script).toContain("Errands");
+      expect(script).toContain("flattenedProjects");
+      expect(script).toContain("moveTasks");
+    });
+
+    it("should merge single tag with tags array", () => {
+      const script = buildCreateTaskScript({ name: "Test", tag: "solo" });
+      expect(script).toContain("solo");
+      expect(script).toContain("addTag");
+    });
   });
 
   describe("buildUpdateTaskScript", () => {
@@ -296,6 +309,66 @@ describe("task script builders", () => {
     it("should handle clearing deferDate with null", () => {
       const script = buildUpdateTaskScript({ id: "task-123", deferDate: null });
       expect(script).toContain("deferDate");
+    });
+
+    it("should replace tags via tags array", () => {
+      const script = buildUpdateTaskScript({ id: "task-123", tags: ["work", "urgent"] });
+      expect(script).toContain("clearTags");
+      expect(script).toContain("addTag");
+      expect(script).toContain("work");
+      expect(script).toContain("urgent");
+    });
+
+    it("should merge single tag into replace set", () => {
+      const script = buildUpdateTaskScript({ id: "task-123", tag: "waiting" });
+      expect(script).toContain("clearTags");
+      expect(script).toContain("waiting");
+    });
+
+    it("should add tags additively without clearing", () => {
+      const script = buildUpdateTaskScript({ id: "task-123", addTags: ["later"] });
+      expect(script).toContain("addTag");
+      expect(script).toContain("later");
+    });
+
+    it("should remove tags by name", () => {
+      const script = buildUpdateTaskScript({ id: "task-123", removeTags: ["old"] });
+      expect(script).toContain("removeTag");
+      expect(script).toContain("old");
+    });
+
+    it("should move task to a project by id-or-name", () => {
+      const script = buildUpdateTaskScript({ id: "task-123", project: "Errands" });
+      expect(script).toContain("flattenedProjects");
+      expect(script).toContain("moveTasks");
+      expect(script).toContain("Errands");
+    });
+
+    it("should adjust due date relatively via dueBy", () => {
+      const script = buildUpdateTaskScript({ id: "task-123", dueBy: "+3d" });
+      expect(script).toContain("adjustDate");
+      expect(script).toContain("+3d");
+    });
+
+    it("should adjust defer date relatively via deferBy", () => {
+      const script = buildUpdateTaskScript({ id: "task-123", deferBy: "-1w" });
+      expect(script).toContain("adjustDate");
+      expect(script).toContain("-1w");
+    });
+
+    it("should produce syntactically valid JavaScript", () => {
+      const script = buildUpdateTaskScript({
+        id: "task-123",
+        name: "x",
+        tags: ["a"],
+        addTags: ["b"],
+        removeTags: ["c"],
+        project: "p",
+        dueBy: "+3d",
+        deferBy: "-1w",
+      });
+      // Parses without executing; catches brace/regex-escaping errors in the OmniJS.
+      expect(() => new Function(script)).not.toThrow();
     });
   });
 

@@ -31,6 +31,18 @@ export interface FlagSpec {
   description: string;
   default?: unknown;
   parser?: "parseCliDate" | "parseCsv" | "parseInt";
+  /**
+   * The client-API argument key this flag binds to. Defaults to `long`.
+   * Use when the CLI flag name differs from the client method's field
+   * (e.g. `--due` → `dueDate`, `--estimate` → `estimatedMinutes`).
+   */
+  argKey?: string;
+  /**
+   * For boolean flags: the fixed value to assign to `argKey` when the flag
+   * is present, instead of `true`. Enables inverse/sentinel flags such as
+   * `--unflag` → `{ flagged: false }` or `--clear-due` → `{ dueDate: null }`.
+   */
+  bindValue?: unknown;
 }
 
 export interface MethodMeta {
@@ -209,14 +221,14 @@ export const CLI_METADATA: Partial<Record<keyof OmniFocusClient, MethodMeta>> = 
           { name: "name", type: "string", required: true, description: "Task name" },
         ],
         flags: [
-          { long: "project", short: "p", type: "string", description: "Project name or ID" },
+          { long: "project", short: "p", type: "string", argKey: "project", description: "Project name or ID" },
           { long: "note", short: "n", type: "string", description: "Task note" },
-          { long: "due", short: "d", type: "date", parser: "parseCliDate", description: "Due date" },
-          { long: "defer", type: "date", parser: "parseCliDate", description: "Defer date" },
+          { long: "due", short: "d", type: "date", parser: "parseCliDate", argKey: "dueDate", description: "Due date" },
+          { long: "defer", type: "date", parser: "parseCliDate", argKey: "deferDate", description: "Defer date" },
           { long: "flagged", short: "f", type: "boolean", description: "Mark as flagged" },
-          { long: "tag", short: "t", type: "string", description: "Primary tag" },
+          { long: "tag", short: "t", type: "string", argKey: "tag", description: "Primary tag" },
           { long: "tags", type: "string[]", parser: "parseCsv", description: "Multiple tags (comma-sep)" },
-          { long: "estimate", short: "e", type: "number", description: "Estimated minutes" },
+          { long: "estimate", short: "e", type: "number", parser: "parseInt", argKey: "estimatedMinutes", description: "Estimated minutes" },
         ],
         outputShape: "task",
       },
@@ -229,7 +241,7 @@ export const CLI_METADATA: Partial<Record<keyof OmniFocusClient, MethodMeta>> = 
           { name: "name", type: "string", required: true, description: "Task name" },
         ],
         flags: [
-          { long: "due", short: "d", type: "date", parser: "parseCliDate", description: "Due date" },
+          { long: "due", short: "d", type: "date", parser: "parseCliDate", argKey: "dueDate", description: "Due date" },
           { long: "flagged", short: "f", type: "boolean", description: "Mark as flagged" },
         ],
         bindArgs: { inbox: true },
@@ -254,7 +266,12 @@ export const CLI_METADATA: Partial<Record<keyof OmniFocusClient, MethodMeta>> = 
       {
         name: "modify",
         aliases: ["mod"],
-        description: "Update an existing task.",
+        description: "Update an existing task. Combine any number of flags in one call.",
+        examples: [
+          "of modify abc123 --name \"New name\" --due tomorrow -f",
+          "of mod abc123 --tags work,urgent --project Inbox",
+          "of mod abc123 --add-tag waiting --remove-tag urgent --due-by +3d",
+        ],
         category: "write",
         positional: [
           { name: "id", type: "id", required: true, description: "Task ID" },
@@ -262,15 +279,20 @@ export const CLI_METADATA: Partial<Record<keyof OmniFocusClient, MethodMeta>> = 
         flags: [
           { long: "name", type: "string", description: "Set task name" },
           { long: "note", short: "n", type: "string", description: "Set task note" },
-          { long: "due", short: "d", type: "date", parser: "parseCliDate", description: "Set due date" },
-          { long: "due-by", type: "string", description: "Adjust due date relatively (+3d, -1w)" },
-          { long: "defer", type: "date", parser: "parseCliDate", description: "Set defer date" },
-          { long: "defer-by", type: "string", description: "Adjust defer date relatively" },
-          { long: "flag", short: "f", type: "boolean", description: "Set flagged" },
-          { long: "unflag", type: "boolean", description: "Remove flag" },
-          { long: "tag", short: "t", type: "string", description: "Set primary tag" },
-          { long: "project", short: "p", type: "string", description: "Move to project" },
-          { long: "estimate", short: "e", type: "number", description: "Set estimated minutes" },
+          { long: "due", short: "d", type: "date", parser: "parseCliDate", argKey: "dueDate", description: "Set due date" },
+          { long: "due-by", type: "string", argKey: "dueBy", description: "Adjust due date relatively (+3d, -1w)" },
+          { long: "clear-due", type: "boolean", argKey: "dueDate", bindValue: null, description: "Clear the due date" },
+          { long: "defer", type: "date", parser: "parseCliDate", argKey: "deferDate", description: "Set defer date" },
+          { long: "defer-by", type: "string", argKey: "deferBy", description: "Adjust defer date relatively" },
+          { long: "clear-defer", type: "boolean", argKey: "deferDate", bindValue: null, description: "Clear the defer date" },
+          { long: "flag", short: "f", type: "boolean", argKey: "flagged", bindValue: true, description: "Set flagged" },
+          { long: "unflag", type: "boolean", argKey: "flagged", bindValue: false, description: "Remove flag" },
+          { long: "tag", short: "t", type: "string", argKey: "tag", description: "Replace tags with this single tag" },
+          { long: "tags", type: "string[]", parser: "parseCsv", description: "Replace all tags (comma-sep)" },
+          { long: "add-tag", type: "string[]", parser: "parseCsv", argKey: "addTags", description: "Add tags (comma-sep)" },
+          { long: "remove-tag", type: "string[]", parser: "parseCsv", argKey: "removeTags", description: "Remove tags (comma-sep)" },
+          { long: "project", short: "p", type: "string", argKey: "project", description: "Move to project (name or ID)" },
+          { long: "estimate", short: "e", type: "number", parser: "parseInt", argKey: "estimatedMinutes", description: "Set estimated minutes" },
         ],
         outputShape: "task",
       },
@@ -367,16 +389,16 @@ export const CLI_METADATA: Partial<Record<keyof OmniFocusClient, MethodMeta>> = 
           { name: "name", type: "string", required: true, description: "Project name" },
         ],
         flags: [
-          { long: "folder", short: "f", type: "string", description: "Add to specific folder" },
+          { long: "folder", short: "f", type: "string", argKey: "folder", description: "Add to specific folder (name or ID)" },
           { long: "note", short: "n", type: "string", description: "Project note" },
-          { long: "due", short: "d", type: "date", parser: "parseCliDate", description: "Due date" },
-          { long: "defer", type: "date", parser: "parseCliDate", description: "Defer date" },
+          { long: "due", short: "d", type: "date", parser: "parseCliDate", argKey: "dueDate", description: "Due date" },
+          { long: "defer", type: "date", parser: "parseCliDate", argKey: "deferDate", description: "Defer date" },
           { long: "flagged", type: "boolean", description: "Mark as flagged" },
-          { long: "tag", short: "t", type: "string", description: "Add primary tag" },
-          { long: "tasks", type: "string[]", parser: "parseCsv", description: "Initial tasks (comma-sep)" },
+          { long: "tag", short: "t", type: "string", argKey: "tag", description: "Add primary tag" },
+          { long: "tags", type: "string[]", parser: "parseCsv", description: "Add multiple tags (comma-sep)" },
           { long: "sequential", type: "boolean", description: "Sequential project" },
-          { long: "parallel", type: "boolean", description: "Parallel project" },
-          { long: "single-actions", type: "boolean", description: "Single action list" },
+          { long: "parallel", type: "boolean", argKey: "sequential", bindValue: false, description: "Parallel project" },
+          { long: "single-actions", type: "boolean", argKey: "singleActionList", description: "Single action list" },
         ],
         outputShape: "project",
       },
@@ -395,16 +417,17 @@ export const CLI_METADATA: Partial<Record<keyof OmniFocusClient, MethodMeta>> = 
         flags: [
           { long: "name", type: "string", description: "Rename project" },
           { long: "note", short: "n", type: "string", description: "Set project note" },
-          { long: "due", short: "d", type: "date", parser: "parseCliDate", description: "Set due date" },
-          { long: "defer", type: "date", parser: "parseCliDate", description: "Set defer date" },
-          { long: "clear-due", type: "boolean", description: "Clear due date" },
-          { long: "clear-defer", type: "boolean", description: "Clear defer date" },
-          { long: "flag", short: "f", type: "boolean", description: "Flag project" },
-          { long: "unflag", type: "boolean", description: "Unflag project" },
-          { long: "tag", short: "t", type: "string", description: "Set primary tag" },
+          { long: "due", short: "d", type: "date", parser: "parseCliDate", argKey: "dueDate", description: "Set due date" },
+          { long: "defer", type: "date", parser: "parseCliDate", argKey: "deferDate", description: "Set defer date" },
+          { long: "clear-due", type: "boolean", argKey: "dueDate", bindValue: null, description: "Clear due date" },
+          { long: "clear-defer", type: "boolean", argKey: "deferDate", bindValue: null, description: "Clear defer date" },
+          { long: "flag", short: "f", type: "boolean", argKey: "flagged", bindValue: true, description: "Flag project" },
+          { long: "unflag", type: "boolean", argKey: "flagged", bindValue: false, description: "Unflag project" },
+          { long: "tag", short: "t", type: "string", argKey: "tag", description: "Replace tags with this single tag" },
+          { long: "tags", type: "string[]", parser: "parseCsv", description: "Replace all tags (comma-sep)" },
           { long: "status", type: "string", description: "Set status (active, on-hold, done, dropped)" },
           { long: "sequential", type: "boolean", description: "Set to sequential" },
-          { long: "parallel", type: "boolean", description: "Set to parallel" },
+          { long: "parallel", type: "boolean", argKey: "sequential", bindValue: false, description: "Set to parallel" },
         ],
         outputShape: "project",
       },
@@ -505,7 +528,7 @@ export const CLI_METADATA: Partial<Record<keyof OmniFocusClient, MethodMeta>> = 
           { name: "name", type: "string", required: true, description: "Folder name" },
         ],
         flags: [
-          { long: "parent", short: "p", type: "string", description: "Parent folder ID" },
+          { long: "parent", short: "p", type: "string", argKey: "parentFolderId", description: "Parent folder ID" },
         ],
         outputShape: "folder",
       },
@@ -523,9 +546,8 @@ export const CLI_METADATA: Partial<Record<keyof OmniFocusClient, MethodMeta>> = 
         ],
         flags: [
           { long: "name", type: "string", description: "Rename folder" },
-          { long: "note", type: "string", description: "Set folder note" },
-          { long: "hidden", type: "boolean", description: "Hide folder" },
-          { long: "visible", type: "boolean", description: "Show folder" },
+          { long: "hidden", type: "boolean", argKey: "status", bindValue: "dropped", description: "Hide (drop) folder" },
+          { long: "visible", type: "boolean", argKey: "status", bindValue: "active", description: "Show (activate) folder" },
         ],
         outputShape: "folder",
       },
@@ -542,8 +564,8 @@ export const CLI_METADATA: Partial<Record<keyof OmniFocusClient, MethodMeta>> = 
           { name: "name", type: "string", required: true, description: "Tag name" },
         ],
         flags: [
-          { long: "parent", short: "p", type: "string", description: "Parent tag ID" },
-          { long: "no-next-action", type: "boolean", description: "Disable next action" },
+          { long: "parent", short: "p", type: "string", argKey: "parentTagId", description: "Parent tag ID" },
+          { long: "no-next-action", type: "boolean", argKey: "allowsNextAction", bindValue: false, description: "Disable next action" },
         ],
         outputShape: "tag",
       },
@@ -561,10 +583,10 @@ export const CLI_METADATA: Partial<Record<keyof OmniFocusClient, MethodMeta>> = 
         ],
         flags: [
           { long: "name", type: "string", description: "Rename tag" },
-          { long: "hidden", type: "boolean", description: "Hide tag" },
-          { long: "visible", type: "boolean", description: "Show tag" },
-          { long: "allows-next", type: "boolean", description: "Enable next action" },
-          { long: "no-allows-next", type: "boolean", description: "Disable next action" },
+          { long: "hidden", type: "boolean", argKey: "status", bindValue: "dropped", description: "Hide (drop) tag" },
+          { long: "visible", type: "boolean", argKey: "status", bindValue: "active", description: "Show (activate) tag" },
+          { long: "allows-next", type: "boolean", argKey: "allowsNextAction", bindValue: true, description: "Enable next action" },
+          { long: "no-allows-next", type: "boolean", argKey: "allowsNextAction", bindValue: false, description: "Disable next action" },
         ],
         outputShape: "tag",
       },

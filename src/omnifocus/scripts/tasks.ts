@@ -161,10 +161,21 @@ export function buildCreateTaskScript(args: CreateTaskArgs): string {
     var projects = flattenedProjects.filter(function(p) { return p.name === args.projectName; });
     if (projects.length === 0) throw new Error("Project not found: " + args.projectName);
     moveTasks([task], projects[0].ending);
+  } else if (args.project) {
+    // id-or-name convenience: resolve by ID first, then by name.
+    var destProject = byId(flattenedProjects, args.project);
+    if (!destProject) {
+      var pmatches = flattenedProjects.filter(function(p) { return p.name === args.project; });
+      if (pmatches.length === 0) throw new Error("Project not found: " + args.project);
+      destProject = pmatches[0];
+    }
+    moveTasks([task], destProject.ending);
   }
 
-  if (args.tags && args.tags.length > 0) {
-    args.tags.forEach(function(tagName) {
+  var tagNames = (args.tags || []).slice();
+  if (args.tag && tagNames.indexOf(args.tag) === -1) tagNames.push(args.tag);
+  if (tagNames.length > 0) {
+    tagNames.forEach(function(tagName) {
       var matches = flattenedTags.filter(function(t) { return t.name === tagName; });
       if (matches.length > 0) {
         task.addTag(matches[0]);
@@ -199,6 +210,21 @@ export function buildUpdateTaskScript(args: UpdateTaskArgs): string {
   if (args.sequential !== undefined) task.sequential = args.sequential;
   if (args.completedByChildren !== undefined) task.completedByChildren = args.completedByChildren;
 
+  // Relative date adjustments (e.g. "+3d", "-1w"), applied to the current value.
+  function adjustDate(base, spec) {
+    var m = /^([+-])(\\d+)([dwmy])$/.exec(spec);
+    if (!m) throw new Error("Invalid relative date: " + spec + " (use +3d, -1w, etc.)");
+    var amt = parseInt(m[2], 10) * (m[1] === "+" ? 1 : -1);
+    var d = base ? new Date(base) : new Date();
+    if (m[3] === "d") d.setDate(d.getDate() + amt);
+    else if (m[3] === "w") d.setDate(d.getDate() + amt * 7);
+    else if (m[3] === "m") d.setMonth(d.getMonth() + amt);
+    else if (m[3] === "y") d.setFullYear(d.getFullYear() + amt);
+    return d;
+  }
+  if (args.dueBy !== undefined) task.dueDate = adjustDate(task.dueDate, args.dueBy);
+  if (args.deferBy !== undefined) task.deferDate = adjustDate(task.deferDate, args.deferBy);
+
   if (args.repetitionRule !== undefined) {
     if (args.repetitionRule === null) {
       task.repetitionRule = null;
@@ -206,6 +232,41 @@ export function buildUpdateTaskScript(args: UpdateTaskArgs): string {
       var methodMap = { "fixed": Task.RepetitionMethod.Fixed, "startAfterCompletion": Task.RepetitionMethod.StartAfterCompletion, "dueAfterCompletion": Task.RepetitionMethod.DueAfterCompletion };
       task.repetitionRule = new Task.RepetitionRule(args.repetitionRule.ruleString, methodMap[args.repetitionRule.method] || Task.RepetitionMethod.Fixed);
     }
+  }
+
+  // Move to a different project, resolved by ID then by name.
+  if (args.project !== undefined) {
+    var destProject = byId(flattenedProjects, args.project);
+    if (!destProject) {
+      var pmatches = flattenedProjects.filter(function(p) { return p.name === args.project; });
+      if (pmatches.length === 0) throw new Error("Project not found: " + args.project);
+      destProject = pmatches[0];
+    }
+    moveTasks([task], destProject.ending);
+  }
+
+  // Tag operations. Replace (tags / tag) runs first, then additive add/remove.
+  var tagMap = {};
+  flattenedTags.forEach(function(t) { tagMap[t.name] = t; });
+  function findOrCreateTag(name) {
+    if (tagMap[name]) return tagMap[name];
+    var newTag = new Tag(name);
+    tags.push(newTag);
+    tagMap[name] = newTag;
+    return newTag;
+  }
+
+  var replaceTags = (args.tags || []).slice();
+  if (args.tag !== undefined && replaceTags.indexOf(args.tag) === -1) replaceTags.push(args.tag);
+  if (args.tags !== undefined || args.tag !== undefined) {
+    task.clearTags();
+    replaceTags.forEach(function(name) { task.addTag(findOrCreateTag(name)); });
+  }
+  if (args.addTags !== undefined) {
+    args.addTags.forEach(function(name) { task.addTag(findOrCreateTag(name)); });
+  }
+  if (args.removeTags !== undefined) {
+    args.removeTags.forEach(function(name) { if (tagMap[name]) task.removeTag(tagMap[name]); });
   }
 
   return JSON.stringify(serializeTask(task));
