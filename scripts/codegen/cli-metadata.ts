@@ -115,7 +115,7 @@ export const CLI_METADATA: Partial<Record<keyof OmniFocusClient, MethodMeta>> = 
         description: "List tasks for upcoming days.",
         category: "read",
         flags: [
-          { long: "days", short: "d", type: "number", default: 7, description: "Number of days to show" },
+          { long: "days", short: "d", type: "number", parser: "parseInt", default: 7, description: "Number of days to show" },
         ],
         outputShape: "forecast",
       },

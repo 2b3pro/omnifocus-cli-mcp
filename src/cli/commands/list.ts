@@ -118,7 +118,7 @@ export function registerListCommands(program: Command, client: OmniFocusClient) 
       
 
       // Map flags
-      if (options.days !== undefined) clientArgs["days"] = options.days;
+      if (options.days !== undefined) clientArgs["days"] = parseInt(options.days, 10);
 
       
       const result = await (client as any).getForecast(clientArgs);

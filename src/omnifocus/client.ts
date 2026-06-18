@@ -83,7 +83,9 @@ export class OmniFocusClient {
     return result;
   }
 
-  async search(query: string, limit = 50): Promise<Array<{ type: string; id: string; name: string; note?: string }>> {
+  async search(queryOrArgs: string | { query?: string; limit?: number }, limit = 50): Promise<Array<{ type: string; id: string; name: string; note?: string }>> {
+    const query = typeof queryOrArgs === "string" ? queryOrArgs : (queryOrArgs.query ?? "");
+    if (typeof queryOrArgs !== "string" && queryOrArgs.limit !== undefined) limit = queryOrArgs.limit;
     const cacheKey = `database:search:${query}:${limit}`;
     const cached = this.cache.get<Array<{ type: string; id: string; name: string; note?: string }>>(cacheKey);
     if (cached) return cached;
@@ -136,25 +138,29 @@ export class OmniFocusClient {
     return result;
   }
 
-  async completeTask(id: string): Promise<TaskJSON> {
+  async completeTask(idOrArgs: string | { id: string }): Promise<TaskJSON> {
+    const id = typeof idOrArgs === "string" ? idOrArgs : idOrArgs.id;
     const result = await runOmniJSJson<TaskJSON>(buildCompleteTaskScript(id));
     this.invalidateAfterMutation("tasks:", "projects:", "database:");
     return result;
   }
 
-  async uncompleteTask(id: string): Promise<TaskJSON> {
+  async uncompleteTask(idOrArgs: string | { id: string }): Promise<TaskJSON> {
+    const id = typeof idOrArgs === "string" ? idOrArgs : idOrArgs.id;
     const result = await runOmniJSJson<TaskJSON>(buildUncompleteTaskScript(id));
     this.invalidateAfterMutation("tasks:", "projects:", "database:");
     return result;
   }
 
-  async dropTask(id: string): Promise<TaskJSON> {
+  async dropTask(idOrArgs: string | { id: string }): Promise<TaskJSON> {
+    const id = typeof idOrArgs === "string" ? idOrArgs : idOrArgs.id;
     const result = await runOmniJSJson<TaskJSON>(buildDropTaskScript(id));
     this.invalidateAfterMutation("tasks:", "projects:", "database:");
     return result;
   }
 
-  async deleteTask(id: string): Promise<{ deleted: boolean; id: string }> {
+  async deleteTask(idOrArgs: string | { id: string }): Promise<{ deleted: boolean; id: string }> {
+    const id = typeof idOrArgs === "string" ? idOrArgs : idOrArgs.id;
     const result = await runOmniJSJson<{ deleted: boolean; id: string }>(buildDeleteTaskScript(id));
     this.invalidateAfterMutation("tasks:", "projects:", "database:");
     return result;
@@ -262,7 +268,8 @@ export class OmniFocusClient {
     return result;
   }
 
-  async getProject(idOrName: string): Promise<ProjectJSON> {
+  async getProject(idOrArgs: string | { idOrName: string }): Promise<ProjectJSON> {
+    const idOrName = typeof idOrArgs === "string" ? idOrArgs : idOrArgs.idOrName;
     const cacheKey = `projects:get:${idOrName}`;
     const cached = this.cache.get<ProjectJSON>(cacheKey);
     if (cached) return cached;
@@ -284,13 +291,15 @@ export class OmniFocusClient {
     return result;
   }
 
-  async completeProject(id: string): Promise<ProjectJSON> {
+  async completeProject(idOrArgs: string | { id: string }): Promise<ProjectJSON> {
+    const id = typeof idOrArgs === "string" ? idOrArgs : idOrArgs.id;
     const result = await runOmniJSJson<ProjectJSON>(buildCompleteProjectScript(id));
     this.invalidateAfterMutation("projects:", "tasks:", "database:");
     return result;
   }
 
-  async dropProject(id: string): Promise<ProjectJSON> {
+  async dropProject(idOrArgs: string | { id: string }): Promise<ProjectJSON> {
+    const id = typeof idOrArgs === "string" ? idOrArgs : idOrArgs.id;
     const result = await runOmniJSJson<ProjectJSON>(buildDropProjectScript(id));
     this.invalidateAfterMutation("projects:", "tasks:", "database:");
     return result;
@@ -302,7 +311,8 @@ export class OmniFocusClient {
     return result;
   }
 
-  async deleteProject(id: string): Promise<{ deleted: boolean; id: string }> {
+  async deleteProject(idOrArgs: string | { id: string }): Promise<{ deleted: boolean; id: string }> {
+    const id = typeof idOrArgs === "string" ? idOrArgs : idOrArgs.id;
     const result = await runOmniJSJson<{ deleted: boolean; id: string }>(buildDeleteProjectScript(id));
     this.invalidateAfterMutation("projects:", "tasks:", "folders:", "database:");
     return result;
@@ -318,7 +328,8 @@ export class OmniFocusClient {
     return result;
   }
 
-  async markReviewed(id: string): Promise<ProjectJSON> {
+  async markReviewed(idOrArgs: string | { id: string }): Promise<ProjectJSON> {
+    const id = typeof idOrArgs === "string" ? idOrArgs : idOrArgs.id;
     const result = await runOmniJSJson<ProjectJSON>(buildMarkReviewedScript(id));
     this.invalidateAfterMutation("projects:");
     return result;
@@ -346,7 +357,8 @@ export class OmniFocusClient {
     return result;
   }
 
-  async getFolder(id: string): Promise<FolderWithChildrenJSON> {
+  async getFolder(idOrArgs: string | { id: string }): Promise<FolderWithChildrenJSON> {
+    const id = typeof idOrArgs === "string" ? idOrArgs : idOrArgs.id;
     const cacheKey = `folders:get:${id}`;
     const cached = this.cache.get<FolderWithChildrenJSON>(cacheKey);
     if (cached) return cached;
@@ -368,7 +380,8 @@ export class OmniFocusClient {
     return result;
   }
 
-  async deleteFolder(id: string): Promise<{ deleted: boolean; id: string }> {
+  async deleteFolder(idOrArgs: string | { id: string }): Promise<{ deleted: boolean; id: string }> {
+    const id = typeof idOrArgs === "string" ? idOrArgs : idOrArgs.id;
     const result = await runOmniJSJson<{ deleted: boolean; id: string }>(buildDeleteFolderScript(id));
     this.invalidateAfterMutation("folders:", "projects:", "database:");
     return result;
@@ -386,7 +399,8 @@ export class OmniFocusClient {
     return result;
   }
 
-  async getTag(id: string): Promise<TagWithChildrenJSON> {
+  async getTag(idOrArgs: string | { id: string }): Promise<TagWithChildrenJSON> {
+    const id = typeof idOrArgs === "string" ? idOrArgs : idOrArgs.id;
     const cacheKey = `tags:get:${id}`;
     const cached = this.cache.get<TagWithChildrenJSON>(cacheKey);
     if (cached) return cached;
@@ -408,7 +422,8 @@ export class OmniFocusClient {
     return result;
   }
 
-  async deleteTag(id: string): Promise<{ deleted: boolean; id: string }> {
+  async deleteTag(idOrArgs: string | { id: string }): Promise<{ deleted: boolean; id: string }> {
+    const id = typeof idOrArgs === "string" ? idOrArgs : idOrArgs.id;
     const result = await runOmniJSJson<{ deleted: boolean; id: string }>(buildDeleteTagScript(id));
     this.invalidateAfterMutation("tags:", "tasks:", "database:");
     return result;
@@ -426,7 +441,8 @@ export class OmniFocusClient {
     return result;
   }
 
-  async getPerspectiveTasks(name: string): Promise<TaskJSON[]> {
+  async getPerspectiveTasks(nameOrArgs: string | { name: string }): Promise<TaskJSON[]> {
+    const name = typeof nameOrArgs === "string" ? nameOrArgs : nameOrArgs.name;
     const cacheKey = `perspectives:tasks:${name}`;
     const cached = this.cache.get<TaskJSON[]>(cacheKey);
     if (cached) return cached;
@@ -442,13 +458,15 @@ export class OmniFocusClient {
     return runOmniJSJson<{ ok: true; version: string }>(`JSON.stringify({ ok: true, version: app.version })`);
   }
 
-  async holdProject(idOrName: string): Promise<ProjectJSON> {
+  async holdProject(idOrArgs: string | { idOrName: string }): Promise<ProjectJSON> {
+    const idOrName = typeof idOrArgs === "string" ? idOrArgs : idOrArgs.idOrName;
     const result = await runOmniJSJson<ProjectJSON>(buildHoldProjectScript(idOrName));
     this.invalidateAfterMutation("projects:");
     return result;
   }
 
-  async activateProject(idOrName: string): Promise<ProjectJSON> {
+  async activateProject(idOrArgs: string | { idOrName: string }): Promise<ProjectJSON> {
+    const idOrName = typeof idOrArgs === "string" ? idOrArgs : idOrArgs.idOrName;
     const result = await runOmniJSJson<ProjectJSON>(buildActivateProjectScript(idOrName));
     this.invalidateAfterMutation("projects:");
     return result;
@@ -468,7 +486,8 @@ export class OmniFocusClient {
     return runOmniJSJson<{ success: boolean; opened: true }>(buildQuickEntryScript(args));
   }
 
-  async getForecast(days: number = 7): Promise<any[]> {
+  async getForecast(daysOrArgs: number | { days?: number } = 7): Promise<any[]> {
+    const days = typeof daysOrArgs === "number" ? daysOrArgs : (daysOrArgs.days ?? 7);
     const result = await runOmniJSJson<any[]>(buildGetForecastScript(days));
     return result;
   }
