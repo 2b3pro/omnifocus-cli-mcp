@@ -15,6 +15,8 @@ import { NotRunningError, ScriptError, TimeoutError } from "../../../src/utils/e
 vi.mock("../../../src/omnifocus/executor.js", () => ({
   runOmniJS: vi.fn(),
   runOmniJSJson: vi.fn(),
+  runJXA: vi.fn(),
+  runJXAJson: vi.fn(),
 }));
 
 import { runOmniJSJson } from "../../../src/omnifocus/executor.js";
@@ -1096,23 +1098,19 @@ describe("Tool handler tests via MCP protocol", () => {
   // ─── Perspective tools ────────────────────────────────────────────
 
   describe("list_perspectives", () => {
-    it("should list perspectives", async () => {
+    // The shared client caches perspective lists under one key, so this suite gets
+    // exactly one executor call — assert on the script here rather than in a
+    // follow-up test that would only ever see a cache hit.
+    it("should list custom perspectives without any name filtering", async () => {
       mockRunOmniJSJson.mockResolvedValue(mockPerspectiveList);
       const result = await client.callTool({ name: "list_perspectives", arguments: {} });
       const parsed = parseResult(result);
       expect(parsed).toHaveLength(3);
       expect(parsed[0].name).toBe("Due Soon");
-    });
-
-    it("should filter with includeBuiltIn=false", async () => {
-      mockRunOmniJSJson.mockResolvedValue([]);
-      await client.callTool({
-        name: "list_perspectives",
-        arguments: { includeBuiltIn: false },
-      });
 
       const scriptArg = mockRunOmniJSJson.mock.calls[0][0];
-      expect(scriptArg).toContain("builtInNames");
+      expect(scriptArg).toContain("Perspective.Custom.all");
+      expect(scriptArg).not.toContain("builtInNames");
     });
   });
 

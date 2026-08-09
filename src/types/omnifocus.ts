@@ -376,11 +376,6 @@ export interface BatchCompleteTasksArgs {
   taskIds: string[];
 }
 
-export interface ListPerspectivesArgs {
-  includeBuiltIn?: boolean;
-  includeCustom?: boolean;
-}
-
 export interface DumpDatabaseArgs {
   includeCompleted?: boolean;
   maxDepth?: number;

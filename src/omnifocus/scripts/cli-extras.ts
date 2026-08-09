@@ -33,9 +33,18 @@ export function buildActivateProjectScript(idOrName: string): string {
   })()`;
 }
 
+/**
+ * Returns a raw JXA script (NOT OmniJS) that triggers an OmniFocus sync.
+ *
+ * Must be executed via runJXA: the OmniJS sandbox exposes no sync method
+ * (`Database.sync` is undefined) and there is no /sync URL scheme, so this goes
+ * through the application-level Apple Events command. Sync runs asynchronously;
+ * the script returns as soon as it has been triggered.
+ */
 export function buildSyncScript(): string {
   return `(() => {
-    Database.sync();
+    const app = Application("OmniFocus");
+    app.synchronize();
     return JSON.stringify({ success: true, message: "Sync triggered" });
   })()`;
 }

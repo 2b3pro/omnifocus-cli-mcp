@@ -8,14 +8,20 @@ export function buildDatabaseSummaryScript(): string {
   var tagsList = flattenedTags;
   var folders = flattenedFolders;
 
-  var now = new Date();
-  var soon = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
-
   var allTasks = flattenedTasks;
   var available = allTasks.filter(function(t) { return t.taskStatus === Task.Status.Available; });
-  var dueSoon = available.filter(function(t) { return t.dueDate && t.dueDate <= soon && t.dueDate >= now; });
-  var overdue = available.filter(function(t) { return t.dueDate && t.dueDate < now; });
-  var flagged = available.filter(function(t) { return t.flagged; });
+  // Task.Status is mutually exclusive: a past-due task's status is Overdue, never
+  // Available, so intersecting Available with a past dueDate could never match.
+  var dueSoon = allTasks.filter(function(t) { return t.taskStatus === Task.Status.DueSoon; });
+  var overdue = allTasks.filter(function(t) { return t.taskStatus === Task.Status.Overdue; });
+  // Match OmniFocus's Flagged perspective: effectiveFlagged so children of a flagged
+  // project count, across every status except Completed/Dropped so flagged
+  // Overdue/DueSoon/Blocked/Next tasks aren't silently dropped.
+  var flagged = allTasks.filter(function(t) {
+    return t.effectiveFlagged
+      && t.taskStatus !== Task.Status.Completed
+      && t.taskStatus !== Task.Status.Dropped;
+  });
 
   return JSON.stringify({
     inboxCount: inboxItems.length,
@@ -173,13 +179,20 @@ export function buildDumpDatabaseScript(args: DumpDatabaseArgs = {}): string {
   var perspectivesSerialized = perspectives.map(serializePerspective);
 
   // Summary
-  var now = new Date();
-  var soon = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
   var allTasks = flattenedTasks;
   var available = allTasks.filter(function(t) { return t.taskStatus === Task.Status.Available; });
-  var dueSoon = available.filter(function(t) { return t.dueDate && t.dueDate <= soon && t.dueDate >= now; });
-  var overdue = available.filter(function(t) { return t.dueDate && t.dueDate < now; });
-  var flagged = available.filter(function(t) { return t.flagged; });
+  // Task.Status is mutually exclusive: a past-due task's status is Overdue, never
+  // Available, so intersecting Available with a past dueDate could never match.
+  var dueSoon = allTasks.filter(function(t) { return t.taskStatus === Task.Status.DueSoon; });
+  var overdue = allTasks.filter(function(t) { return t.taskStatus === Task.Status.Overdue; });
+  // Match OmniFocus's Flagged perspective: effectiveFlagged so children of a flagged
+  // project count, across every status except Completed/Dropped so flagged
+  // Overdue/DueSoon/Blocked/Next tasks aren't silently dropped.
+  var flagged = allTasks.filter(function(t) {
+    return t.effectiveFlagged
+      && t.taskStatus !== Task.Status.Completed
+      && t.taskStatus !== Task.Status.Dropped;
+  });
 
   var summary = {
     inboxCount: inbox.filter(function(t) { return t.taskStatus === Task.Status.Available; }).length,

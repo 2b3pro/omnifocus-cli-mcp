@@ -253,8 +253,9 @@ export function buildGetReviewQueueScript(): string {
   ${serializeProjectFn}
 
   var now = new Date();
+  // OmniFocus's own Review perspective treats Active and OnHold projects as reviewable.
   var projects = flattenedProjects.filter(function(p) {
-    return p.status === Project.Status.Active && p.nextReviewDate && p.nextReviewDate <= now;
+    return (p.status === Project.Status.Active || p.status === Project.Status.OnHold) && p.nextReviewDate && p.nextReviewDate <= now;
   });
 
   return JSON.stringify(projects.map(serializeProject));

@@ -471,7 +471,7 @@ Delete a tag.
 
 ### `of sync`
 
-Synchronize the database.
+Trigger an OmniFocus sync — push local changes to OmniSync, pull changes from other devices.
 
 ### `of review`
 
@@ -519,7 +519,7 @@ List tasks in a project.
 
 ### `of perspectives`
 
-List available perspectives.
+List custom perspectives. Built-in perspectives (Inbox, Forecast, Flagged, Review, ...) are not exposed by the OmniFocus API.
 
 **Aliases:** `persp`
 

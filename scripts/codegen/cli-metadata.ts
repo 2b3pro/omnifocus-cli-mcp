@@ -616,7 +616,7 @@ export const CLI_METADATA: Partial<Record<keyof OmniFocusClient, MethodMeta>> = 
     commands: [
       {
         name: "sync",
-        description: "Synchronize the database.",
+        description: "Trigger an OmniFocus sync — push local changes to OmniSync, pull changes from other devices.",
         category: "write",
         outputShape: "message",
       },
@@ -687,7 +687,7 @@ export const CLI_METADATA: Partial<Record<keyof OmniFocusClient, MethodMeta>> = 
       {
         name: "perspectives",
         aliases: ["persp"],
-        description: "List available perspectives.",
+        description: "List custom perspectives. Built-in perspectives (Inbox, Forecast, Flagged, Review, ...) are not exposed by the OmniFocus API.",
         category: "read",
         outputShape: "perspective[]",
       },

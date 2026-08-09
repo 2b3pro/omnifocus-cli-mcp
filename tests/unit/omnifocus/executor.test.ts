@@ -12,7 +12,7 @@ vi.mock("node:util", () => ({
 }));
 
 // Import after mocking
-const { runOmniJS, runOmniJSJson } = await import("../../../src/omnifocus/executor.js");
+const { runOmniJS, runOmniJSJson, runJXA, runJXAJson } = await import("../../../src/omnifocus/executor.js");
 
 describe("runOmniJS", () => {
   beforeEach(() => {
@@ -112,5 +112,62 @@ describe("runOmniJSJson", () => {
   it("should include raw response preview in thrown error", async () => {
     mockExecFileAsync.mockResolvedValue({ stdout: "not-json-data", stderr: "" });
     await expect(runOmniJSJson("test")).rejects.toThrow("not-json-data");
+  });
+});
+
+describe("runJXA", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should pass the script through verbatim, without the OmniJS wrapper", async () => {
+    mockExecFileAsync.mockResolvedValue({ stdout: "ok", stderr: "" });
+    await runJXA('Application("OmniFocus").synchronize()');
+
+    const [, argv] = mockExecFileAsync.mock.calls[0];
+    expect(argv[3]).toBe('Application("OmniFocus").synchronize()');
+    expect(argv[3]).not.toContain("evaluateJavascript");
+  });
+
+  it("should trim stdout", async () => {
+    mockExecFileAsync.mockResolvedValue({ stdout: "  done  \n", stderr: "" });
+    expect(await runJXA("noop()")).toBe("done");
+  });
+
+  it("should surface execution errors", async () => {
+    mockExecFileAsync.mockRejectedValue({ stderr: "execution error: boom", code: 1 });
+    await expect(runJXA("noop()")).rejects.toThrow();
+  });
+
+  it("should share the mutex with runOmniJS so Apple Events never race", async () => {
+    const order: string[] = [];
+    mockExecFileAsync.mockImplementation(async (_cmd: string, argv: string[]) => {
+      const isJXA = !argv[3].includes("evaluateJavascript");
+      if (!isJXA) await new Promise((r) => setTimeout(r, 20));
+      order.push(isJXA ? "jxa" : "omnijs");
+      return { stdout: "{}", stderr: "" };
+    });
+
+    const first = runOmniJS("slow()");
+    const second = runJXA("fast()");
+    await Promise.all([first, second]);
+
+    expect(order).toEqual(["omnijs", "jxa"]);
+  });
+});
+
+describe("runJXAJson", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should parse JSON output", async () => {
+    mockExecFileAsync.mockResolvedValue({ stdout: '{"success":true}', stderr: "" });
+    expect(await runJXAJson("noop()")).toEqual({ success: true });
+  });
+
+  it("should throw a descriptive error on unparseable output", async () => {
+    mockExecFileAsync.mockResolvedValue({ stdout: "not json", stderr: "" });
+    await expect(runJXAJson("noop()")).rejects.toThrow(/Failed to parse OmniFocus response as JSON/);
   });
 });

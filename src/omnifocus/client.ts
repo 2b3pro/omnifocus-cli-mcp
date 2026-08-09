@@ -1,4 +1,4 @@
-import { runOmniJSJson } from "./executor.js";
+import { runOmniJSJson, runJXAJson } from "./executor.js";
 import { Cache } from "./cache.js";
 import { config } from "../config.js";
 import { buildDatabaseSummaryScript, buildSearchScript, buildDumpDatabaseScript, buildSaveDatabaseScript } from "./scripts/database.js";
@@ -50,7 +50,6 @@ import type {
   BatchCreateTasksArgs,
   BatchDeleteTasksArgs,
   BatchCompleteTasksArgs,
-  ListPerspectivesArgs,
   ListProjectsArgs,
   CreateProjectArgs,
   UpdateProjectArgs,
@@ -462,12 +461,12 @@ export class OmniFocusClient {
 
   // ─── Perspectives ─────────────────────────────────────────────────
 
-  async listPerspectives(args: ListPerspectivesArgs = {}): Promise<PerspectiveJSON[]> {
-    const cacheKey = `perspectives:list:${JSON.stringify(args)}`;
+  async listPerspectives(): Promise<PerspectiveJSON[]> {
+    const cacheKey = `perspectives:list`;
     const cached = this.cache.get<PerspectiveJSON[]>(cacheKey);
     if (cached) return cached;
 
-    const result = await runOmniJSJson<PerspectiveJSON[]>(buildListPerspectivesScript(args));
+    const result = await runOmniJSJson<PerspectiveJSON[]>(buildListPerspectivesScript());
     this.cache.set(cacheKey, result, config.cacheTTL.perspectives);
     return result;
   }
@@ -503,8 +502,15 @@ export class OmniFocusClient {
     return result;
   }
 
+  /**
+   * Triggers an OmniFocus sync. Runs through raw JXA rather than OmniJS — the
+   * OmniJS sandbox has no sync method. Sync completes asynchronously, so the
+   * caches are cleared here on the assumption that remote changes are landing.
+   */
   async sync(): Promise<{ success: boolean; message: string }> {
-    return runOmniJSJson<{ success: boolean; message: string }>(buildSyncScript());
+    const result = await runJXAJson<{ success: boolean; message: string }>(buildSyncScript());
+    this.invalidateAfterMutation("tasks:", "projects:", "folders:", "tags:", "perspectives:", "database:");
+    return result;
   }
 
   async reorderTask(args: ReorderTaskArgs): Promise<TaskJSON> {

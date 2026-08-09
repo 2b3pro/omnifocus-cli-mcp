@@ -1,20 +1,13 @@
 import { serializePerspectiveFn, serializeTaskFn } from "../serializers.js";
-import type { ListPerspectivesArgs } from "../../types/omnifocus.js";
 
-export function buildListPerspectivesScript(args: ListPerspectivesArgs = {}): string {
-  const argsJson = JSON.stringify(args);
+export function buildListPerspectivesScript(): string {
   return `(() => {
-  var args = JSON.parse(${JSON.stringify(argsJson)});
   ${serializePerspectiveFn}
 
-  var builtInNames = ["Inbox","Projects","Tags","Forecast","Flagged","Review","Nearby"];
+  // Perspective.Custom.all is custom-only — built-in perspectives (Inbox, Forecast,
+  // Flagged, Review, ...) are not enumerable from OmniJS. Callers reach those through
+  // the dedicated tools instead.
   var perspectives = Perspective.Custom.all.slice();
-  if (args.includeBuiltIn === false) {
-    perspectives = perspectives.filter(function(p) { return builtInNames.indexOf(p.name) === -1; });
-  }
-  if (args.includeCustom === false) {
-    perspectives = perspectives.filter(function(p) { return builtInNames.indexOf(p.name) !== -1; });
-  }
   return JSON.stringify(perspectives.map(serializePerspective));
 })()`;
 }

@@ -5,6 +5,8 @@ import { mockProject, mockProjectList } from "../../fixtures/projects.js";
 vi.mock("../../../src/omnifocus/executor.js", () => ({
   runOmniJS: vi.fn(),
   runOmniJSJson: vi.fn(),
+  runJXA: vi.fn(),
+  runJXAJson: vi.fn(),
 }));
 
 import { runOmniJSJson } from "../../../src/omnifocus/executor.js";

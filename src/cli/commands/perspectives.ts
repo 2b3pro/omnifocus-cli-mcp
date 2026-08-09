@@ -7,7 +7,7 @@ import { parseCliDate, parseCsv } from "../dates-cli.js";
 export function registerPerspectivesCommands(program: Command, client: OmniFocusClient) {
 
   program.command("perspectives")
-    .description("List available perspectives.")
+    .description("List custom perspectives. Built-in perspectives (Inbox, Forecast, Flagged, Review, ...) are not exposed by the OmniFocus API.")
     .alias("persp")
     .action(async (...args) => {
       const options = args[args.length - 2];

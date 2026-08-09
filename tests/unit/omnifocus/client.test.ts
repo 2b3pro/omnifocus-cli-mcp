@@ -12,10 +12,13 @@ import { mockPerspectiveList } from "../../fixtures/perspectives.js";
 vi.mock("../../../src/omnifocus/executor.js", () => ({
   runOmniJS: vi.fn(),
   runOmniJSJson: vi.fn(),
+  runJXA: vi.fn(),
+  runJXAJson: vi.fn(),
 }));
 
-import { runOmniJSJson } from "../../../src/omnifocus/executor.js";
+import { runOmniJSJson, runJXAJson } from "../../../src/omnifocus/executor.js";
 const mockRunOmniJSJson = vi.mocked(runOmniJSJson);
+const mockRunJXAJson = vi.mocked(runJXAJson);
 
 describe("OmniFocusClient", () => {
   let client: OmniFocusClient;
@@ -467,11 +470,33 @@ describe("OmniFocusClient", () => {
   });
 
   describe("listPerspectives caching", () => {
-    it("should cache results for same args", async () => {
+    it("should cache results", async () => {
       mockRunOmniJSJson.mockResolvedValue(mockPerspectiveList);
-      await client.listPerspectives({ includeBuiltIn: true });
-      await client.listPerspectives({ includeBuiltIn: true });
+      await client.listPerspectives();
+      await client.listPerspectives();
       expect(mockRunOmniJSJson).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("sync", () => {
+    it("should run through JXA, not OmniJS", async () => {
+      mockRunJXAJson.mockResolvedValue({ success: true, message: "Sync triggered" });
+      await client.sync();
+      expect(mockRunJXAJson).toHaveBeenCalledTimes(1);
+      expect(mockRunOmniJSJson).not.toHaveBeenCalled();
+      expect(mockRunJXAJson.mock.calls[0][0]).toContain("app.synchronize()");
+    });
+
+    it("should invalidate caches so post-sync reads see remote changes", async () => {
+      mockRunOmniJSJson.mockResolvedValue(mockPerspectiveList);
+      await client.listPerspectives();
+      expect(mockRunOmniJSJson).toHaveBeenCalledTimes(1);
+
+      mockRunJXAJson.mockResolvedValue({ success: true, message: "Sync triggered" });
+      await client.sync();
+
+      await client.listPerspectives();
+      expect(mockRunOmniJSJson).toHaveBeenCalledTimes(2);
     });
   });
 

@@ -13,21 +13,16 @@ describe("perspective script builders", () => {
       expect(script).toContain("JSON.stringify");
     });
 
-    it("should include built-in filter when includeBuiltIn is false", () => {
-      const script = buildListPerspectivesScript({ includeBuiltIn: false });
-      expect(script).toContain("builtInNames");
-      expect(script).toContain("Inbox");
-      expect(script).toContain("Forecast");
+    it("should read from the custom-only perspective collection", () => {
+      const script = buildListPerspectivesScript();
+      expect(script).toContain("Perspective.Custom.all");
     });
 
-    it("should include custom filter when includeCustom is false", () => {
-      const script = buildListPerspectivesScript({ includeCustom: false });
-      expect(script).toContain("builtInNames");
-    });
-
-    it("should pass no filters by default", () => {
-      const script = buildListPerspectivesScript({});
-      expect(script).toContain("builtInNames");
+    it("should not filter by built-in name — that filter was always a no-op or always-empty", () => {
+      const script = buildListPerspectivesScript();
+      expect(script).not.toContain("builtInNames");
+      expect(script).not.toContain("includeBuiltIn");
+      expect(script).not.toContain("includeCustom");
     });
   });
 

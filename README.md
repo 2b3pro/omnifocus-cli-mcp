@@ -62,7 +62,7 @@ of --help
 - **Search:** `of search "report"` — or filter: `of search --tag waiting --project "Q3 Launch" --flagged`
 - **Projects:** `of list projects`
 - **Today:** `of list today`
-- **Sync:** `of sync`
+- **Sync:** `of sync` — pushes local changes to OmniSync and pulls from your other devices
 
 #### Global Flags
 
@@ -216,6 +216,7 @@ This fork expands the original MCP server into a comprehensive toolkit for OmniF
 - **Multi-Tag Task Search:** `of tag tasks "a,b"` returns tasks across several tags in one call — union by default (`--match any`) or intersection (`--match all`). The same semantics are available to AI clients via `tagNames` (intersection) and `tagNamesAny` (union) on `query_omnifocus`, `list_tasks`, `get_task_count`, and `search`.
 - **Codegen Toolchain:** A metadata-driven architecture that ensures the CLI, MCP, and documentation always stay in sync, with a real drift check (`npm run codegen:check`).
 - **Agent-Optimized Docs:** Auto-generated `cli-reference-llm.md` specifically designed for token-efficient AI consumption.
+- **Status-Accurate Counts:** `get_database_summary` and `dump_database` derive due-soon/overdue from `Task.Status` and flagged from `effectiveFlagged`, so inherited and non-Available tasks are counted the way OmniFocus's own perspectives count them.
 - **Safe Live Test Harness:** Integration tests create prefix-tagged items and clean up after themselves, with a standalone orphan sweep (`npm run test:integration:cleanup`).
 
 ## Requirements
@@ -304,7 +305,7 @@ The CLI is currently the authoritative layer for advanced macOS scripting and te
 
 | Tool | Description |
 |------|-------------|
-| `list_perspectives` | List perspectives (built-in and/or custom) |
+| `list_perspectives` | List custom perspectives (built-in perspectives are not exposed by the OmniFocus API — use the dedicated tools instead) |
 | `get_perspective_tasks` | Get tasks shown in a specific perspective |
 
 ### Database & Query (5)
@@ -327,7 +328,7 @@ Resources let an AI client read common views without a tool call. The last two a
 | `omnifocus://today` | Tasks due today or overdue (not completed) |
 | `omnifocus://flagged` | All flagged tasks |
 | `omnifocus://database/summary` | Database summary with counts |
-| `omnifocus://perspectives` | List of all perspectives |
+| `omnifocus://perspectives` | List of custom perspectives |
 | `omnifocus://project/{idOrName}` | A project and its tasks (by name or ID) |
 | `omnifocus://perspective/{name}` | Tasks visible in a named perspective |
 

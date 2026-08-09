@@ -22,15 +22,22 @@ describe("database script builders", () => {
       expect(script).toContain("Task.Status.Available");
     });
 
-    it("should count due soon and overdue tasks", () => {
+    it("should count due soon and overdue by task status, not by dueDate arithmetic", () => {
       const script = buildDatabaseSummaryScript();
-      expect(script).toContain("dueSoon");
-      expect(script).toContain("overdue");
+      // Task.Status is mutually exclusive — intersecting Available with a past
+      // dueDate can never match, which silently pinned both counts to zero.
+      expect(script).toContain("t.taskStatus === Task.Status.DueSoon");
+      expect(script).toContain("t.taskStatus === Task.Status.Overdue");
+      expect(script).not.toContain("t.dueDate < now");
+      expect(script).not.toContain("t.dueDate <= soon");
     });
 
-    it("should count flagged tasks", () => {
+    it("should count flagged tasks via effectiveFlagged across all live statuses", () => {
       const script = buildDatabaseSummaryScript();
-      expect(script).toContain("flagged");
+      expect(script).toContain("t.effectiveFlagged");
+      expect(script).toContain("t.taskStatus !== Task.Status.Completed");
+      expect(script).toContain("t.taskStatus !== Task.Status.Dropped");
+      expect(script).not.toContain("available.filter(function(t) { return t.flagged; })");
     });
   });
 
@@ -89,6 +96,14 @@ describe("database script builders", () => {
   });
 
   describe("buildDumpDatabaseScript", () => {
+    it("should use the same status-based summary predicates as get_database_summary", () => {
+      const script = buildDumpDatabaseScript();
+      expect(script).toContain("t.taskStatus === Task.Status.DueSoon");
+      expect(script).toContain("t.taskStatus === Task.Status.Overdue");
+      expect(script).toContain("t.effectiveFlagged");
+      expect(script).not.toContain("available.filter(function(t) { return t.flagged; })");
+    });
+
     it("should generate dump script with defaults", () => {
       const script = buildDumpDatabaseScript();
       expect(script).toContain("serializeTaskWithChildren");

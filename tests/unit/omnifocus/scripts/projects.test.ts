@@ -222,6 +222,11 @@ describe("project script builders", () => {
       expect(script).toContain("nextReviewDate");
       expect(script).toContain("serializeProject");
     });
+
+    it("should include OnHold projects, matching OmniFocus's Review perspective", () => {
+      const script = buildGetReviewQueueScript();
+      expect(script).toContain("p.status === Project.Status.Active || p.status === Project.Status.OnHold");
+    });
   });
 
   describe("buildMarkReviewedScript", () => {

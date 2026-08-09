@@ -7,7 +7,7 @@ import { parseCliDate, parseCsv } from "../dates-cli.js";
 export function registerSyncCommands(program: Command, client: OmniFocusClient) {
 
   program.command("sync")
-    .description("Synchronize the database.")
+    .description("Trigger an OmniFocus sync — push local changes to OmniSync, pull changes from other devices.")
     .action(async (...args) => {
       const options = args[args.length - 2];
       const command = args[args.length - 1];

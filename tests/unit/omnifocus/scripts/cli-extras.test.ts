@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildReorderTaskScript } from "../../../../src/omnifocus/scripts/cli-extras.js";
+import { buildReorderTaskScript, buildSyncScript } from "../../../../src/omnifocus/scripts/cli-extras.js";
 
 describe("buildReorderTaskScript", () => {
   it("should move task to top", () => {
@@ -37,5 +37,20 @@ describe("buildReorderTaskScript", () => {
   it("should produce syntactically valid JavaScript", () => {
     const script = buildReorderTaskScript({ taskId: "task-123", before: "task-456" });
     expect(() => new Function(script)).not.toThrow();
+  });
+});
+
+describe("buildSyncScript", () => {
+  it("should use the JXA application command, not the OmniJS sandbox", () => {
+    const script = buildSyncScript();
+    // Regression: `Database.sync` does not exist in OmniJS — the old script
+    // threw "Database.sync is not a function" on every invocation.
+    expect(script).toContain('Application("OmniFocus")');
+    expect(script).toContain("app.synchronize()");
+    expect(script).not.toContain("Database.sync");
+  });
+
+  it("should produce syntactically valid JavaScript", () => {
+    expect(() => new Function(buildSyncScript())).not.toThrow();
   });
 });

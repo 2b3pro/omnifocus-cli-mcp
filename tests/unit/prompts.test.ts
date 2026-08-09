@@ -6,6 +6,8 @@ import { createServer } from "../../src/server.js";
 vi.mock("../../src/omnifocus/executor.js", () => ({
   runOmniJS: vi.fn(),
   runOmniJSJson: vi.fn(),
+  runJXA: vi.fn(),
+  runJXAJson: vi.fn(),
 }));
 
 describe("MCP Prompts", () => {

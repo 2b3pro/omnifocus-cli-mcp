@@ -80,7 +80,7 @@ export function registerResources(server: McpServer, client: OmniFocusClient): v
   server.resource(
     "perspectives",
     "omnifocus://perspectives",
-    { description: "List of all OmniFocus perspectives", mimeType: "application/json" },
+    { description: "List of custom OmniFocus perspectives (built-ins are not exposed by the API)", mimeType: "application/json" },
     async (uri) => jsonContent(uri.href, () => client.listPerspectives()),
   );
 
