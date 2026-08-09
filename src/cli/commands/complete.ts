@@ -10,6 +10,7 @@ export function registerCompleteCommands(program: Command, client: OmniFocusClie
     .description("Mark task(s) as complete.")
     .alias("done")
     .argument("<ids...>", "Task IDs")
+    .option("--on <date>", "Backdate the completion to this date instead of now")
     .action(async (...args) => {
       const options = args[args.length - 2];
       const command = args[args.length - 1];
@@ -30,7 +31,7 @@ export function registerCompleteCommands(program: Command, client: OmniFocusClie
       clientArgs["ids"] = positionalArgs[0];
 
       // Map flags
-      
+      if (options.on) clientArgs["completionDate"] = parseCliDate(options.on);
 
       
       const ids = clientArgs["ids"];

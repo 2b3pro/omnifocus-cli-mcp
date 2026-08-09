@@ -215,6 +215,18 @@ describe("project script builders", () => {
     });
   });
 
+  describe("plannedDate support", () => {
+    it("should set plannedDate on create", () => {
+      const script = buildCreateProjectScript({ name: "P", plannedDate: "2026-08-15T09:00:00Z" });
+      expect(script).toContain("project.plannedDate = new Date(args.plannedDate)");
+    });
+
+    it("should set or clear plannedDate on update", () => {
+      const script = buildUpdateProjectScript({ id: "p", plannedDate: "2026-08-15T09:00:00Z" });
+      expect(script).toContain("project.plannedDate = args.plannedDate ? new Date(args.plannedDate) : null");
+    });
+  });
+
   describe("buildGetReviewQueueScript", () => {
     it("should find active projects with past review dates", () => {
       const script = buildGetReviewQueueScript();

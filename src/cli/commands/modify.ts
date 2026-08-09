@@ -18,6 +18,8 @@ export function registerModifyCommands(program: Command, client: OmniFocusClient
     .option("--defer <date>", "Set defer date")
     .option("--defer-by <string>", "Adjust defer date relatively")
     .option("--clear-defer", "Clear the defer date")
+    .option("--planned <date>", "Set planned date")
+    .option("--clear-planned", "Clear the planned date")
     .option("-f, --flag", "Set flagged")
     .option("--unflag", "Remove flag")
     .option("-t, --tag <string>", "Replace tags with this single tag")
@@ -54,6 +56,8 @@ export function registerModifyCommands(program: Command, client: OmniFocusClient
       if (options.defer) clientArgs["deferDate"] = parseCliDate(options.defer);
       if (options.deferBy !== undefined) clientArgs["deferBy"] = options.deferBy;
       if (options.clearDefer !== undefined) clientArgs["deferDate"] = null;
+      if (options.planned) clientArgs["plannedDate"] = parseCliDate(options.planned);
+      if (options.clearPlanned !== undefined) clientArgs["plannedDate"] = null;
       if (options.flag !== undefined) clientArgs["flagged"] = true;
       if (options.unflag !== undefined) clientArgs["flagged"] = false;
       if (options.tag !== undefined) clientArgs["tag"] = options.tag;

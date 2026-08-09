@@ -20,6 +20,7 @@ describe("serializer templates", () => {
         "id", "name", "note", "url", "flagged", "completed", "dropped",
         "deferDate", "dueDate", "completionDate", "droppedDate",
         "added", "modified", "effectiveDueDate", "effectiveDeferDate",
+        "plannedDate", "effectivePlannedDate", "status",
         "effectiveFlagged", "estimatedMinutes", "containingProjectId",
         "containingProjectName", "parentTaskId", "tags", "hasChildren",
         "sequential", "completedByChildren", "inInbox", "repetitionRule",
@@ -38,6 +39,20 @@ describe("serializer templates", () => {
     it("should use Task.Status enums for completed/dropped", () => {
       expect(serializeTaskFn).toContain("Task.Status.Completed");
       expect(serializeTaskFn).toContain("Task.Status.Dropped");
+    });
+
+    it("should map every Task.Status onto the status string", () => {
+      for (const status of ["Available", "Blocked", "Completed", "Dropped", "Next", "DueSoon", "Overdue"]) {
+        expect(serializeTaskFn).toContain(`_taskStatusMap[Task.Status.${status}]`);
+      }
+      expect(serializeTaskFn).toContain('status: _taskStatusMap[task.taskStatus] || "unknown"');
+    });
+
+    it("should not emit effectivelyCompleted/effectivelyDropped", () => {
+      // Those properties are undefined in OmniFocus's current OmniJS API — emitting
+      // them would produce phantom fields that silently drop out of the JSON.
+      expect(serializeTaskFn).not.toContain("effectivelyCompleted");
+      expect(serializeTaskFn).not.toContain("effectivelyDropped");
     });
 
     it("should handle null dates with ternary operators", () => {

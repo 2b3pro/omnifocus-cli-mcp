@@ -39,6 +39,8 @@ export function registerQueryTools(server: McpServer, client: OmniFocusClient): 
       dueBefore: z.string().optional().describe("tasks: due before this ISO date"),
       deferAfter: z.string().optional().describe("tasks: deferred after this ISO date"),
       deferBefore: z.string().optional().describe("tasks: deferred before this ISO date"),
+      plannedAfter: z.string().optional().describe("tasks: planned after this ISO date"),
+      plannedBefore: z.string().optional().describe("tasks: planned before this ISO date"),
       // Project filters
       projectStatus: z.enum(["active", "onHold", "done", "dropped"]).optional().describe("projects: status filter"),
       folderId: z.string().optional().describe("projects: filter by folder ID"),
@@ -83,6 +85,8 @@ export function registerQueryTools(server: McpServer, client: OmniFocusClient): 
           dueBefore: args.dueBefore,
           deferAfter: args.deferAfter,
           deferBefore: args.deferBefore,
+          plannedAfter: args.plannedAfter,
+          plannedBefore: args.plannedBefore,
           search: args.search,
           limit,
         };

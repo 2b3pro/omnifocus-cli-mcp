@@ -17,6 +17,8 @@ const taskFilterLogicFn = `
   var _dueBefore = args.dueBefore ? new Date(args.dueBefore) : null;
   var _deferAfter = args.deferAfter ? new Date(args.deferAfter) : null;
   var _deferBefore = args.deferBefore ? new Date(args.deferBefore) : null;
+  var _plannedAfter = args.plannedAfter ? new Date(args.plannedAfter) : null;
+  var _plannedBefore = args.plannedBefore ? new Date(args.plannedBefore) : null;
   var _searchQuery = args.search ? args.search.toLowerCase() : null;
 
   var tasks = source.filter(function(t) {
@@ -35,9 +37,10 @@ const taskFilterLogicFn = `
       if (t.taskStatus === Task.Status.Completed || t.taskStatus === Task.Status.Dropped) return false;
     }
 
-    // Filter by flagged
-    if (args.flagged === true && !t.flagged) return false;
-    if (args.flagged === false && t.flagged) return false;
+    // Match effectiveFlagged so children of a flagged project surface, mirroring
+    // OmniFocus's Flagged perspective and get_database_summary.flaggedTaskCount.
+    if (args.flagged === true && !t.effectiveFlagged) return false;
+    if (args.flagged === false && t.effectiveFlagged) return false;
 
     // Filter by available
     if (args.available === true && t.taskStatus !== Task.Status.Available) return false;
@@ -70,13 +73,16 @@ const taskFilterLogicFn = `
       if (!_hasAny) return false;
     }
 
-    // Filter by due date range
-    if (_dueAfter && (!t.dueDate || t.dueDate < _dueAfter)) return false;
-    if (_dueBefore && (!t.dueDate || t.dueDate > _dueBefore)) return false;
+    // Match the effective* dates throughout so tasks inheriting a project's
+    // due/defer/planned date are included rather than silently dropped.
+    if (_dueAfter && (!t.effectiveDueDate || t.effectiveDueDate < _dueAfter)) return false;
+    if (_dueBefore && (!t.effectiveDueDate || t.effectiveDueDate > _dueBefore)) return false;
 
-    // Filter by defer date range
-    if (_deferAfter && (!t.deferDate || t.deferDate < _deferAfter)) return false;
-    if (_deferBefore && (!t.deferDate || t.deferDate > _deferBefore)) return false;
+    if (_deferAfter && (!t.effectiveDeferDate || t.effectiveDeferDate < _deferAfter)) return false;
+    if (_deferBefore && (!t.effectiveDeferDate || t.effectiveDeferDate > _deferBefore)) return false;
+
+    if (_plannedAfter && (!t.effectivePlannedDate || t.effectivePlannedDate < _plannedAfter)) return false;
+    if (_plannedBefore && (!t.effectivePlannedDate || t.effectivePlannedDate > _plannedBefore)) return false;
 
     // Filter by search query
     if (_searchQuery) {
@@ -143,7 +149,7 @@ export function buildGetTaskScript(args: string | GetTaskArgs): string {
 }
 
 export function buildCreateTaskScript(args: CreateTaskArgs): string {
-  validateDateArgs(args as unknown as Record<string, unknown>, ["deferDate", "dueDate"]);
+  validateDateArgs(args as unknown as Record<string, unknown>, ["deferDate", "dueDate", "plannedDate"]);
   const argsJson = JSON.stringify(args);
   return `(() => {
   var args = JSON.parse(${JSON.stringify(argsJson)});
@@ -155,6 +161,7 @@ export function buildCreateTaskScript(args: CreateTaskArgs): string {
   if (args.flagged !== undefined) task.flagged = args.flagged;
   if (args.deferDate) task.deferDate = new Date(args.deferDate);
   if (args.dueDate) task.dueDate = new Date(args.dueDate);
+  if (args.plannedDate) task.plannedDate = new Date(args.plannedDate);
   if (args.estimatedMinutes !== undefined) task.estimatedMinutes = args.estimatedMinutes;
   if (args.completedByChildren !== undefined) task.completedByChildren = args.completedByChildren;
 
@@ -202,7 +209,7 @@ export function buildCreateTaskScript(args: CreateTaskArgs): string {
 }
 
 export function buildUpdateTaskScript(args: UpdateTaskArgs): string {
-  validateDateArgs(args as unknown as Record<string, unknown>, ["deferDate", "dueDate"]);
+  validateDateArgs(args as unknown as Record<string, unknown>, ["deferDate", "dueDate", "plannedDate"]);
   const argsJson = JSON.stringify(args);
   return `(() => {
   var args = JSON.parse(${JSON.stringify(argsJson)});
@@ -216,6 +223,7 @@ export function buildUpdateTaskScript(args: UpdateTaskArgs): string {
   if (args.flagged !== undefined) task.flagged = args.flagged;
   if (args.deferDate !== undefined) task.deferDate = args.deferDate ? new Date(args.deferDate) : null;
   if (args.dueDate !== undefined) task.dueDate = args.dueDate ? new Date(args.dueDate) : null;
+  if (args.plannedDate !== undefined) task.plannedDate = args.plannedDate ? new Date(args.plannedDate) : null;
   if (args.estimatedMinutes !== undefined) task.estimatedMinutes = args.estimatedMinutes;
   if (args.sequential !== undefined) task.sequential = args.sequential;
   if (args.completedByChildren !== undefined) task.completedByChildren = args.completedByChildren;
@@ -283,15 +291,18 @@ export function buildUpdateTaskScript(args: UpdateTaskArgs): string {
 })()`;
 }
 
-export function buildCompleteTaskScript(id: string): string {
-  const argsJson = JSON.stringify({ id });
+export function buildCompleteTaskScript(id: string, completionDate?: string): string {
+  validateDateArgs({ completionDate }, ["completionDate"]);
+  const argsJson = JSON.stringify({ id, completionDate });
   return `(() => {
   var args = JSON.parse(${JSON.stringify(argsJson)});
   ${serializeTaskFn}
 
   var task = byId(flattenedTasks, args.id);
   if (!task) throw new Error("Task not found: " + args.id);
-  task.markComplete();
+  // markComplete(date) backdates the completion; markComplete() stamps now.
+  if (args.completionDate) task.markComplete(new Date(args.completionDate));
+  else task.markComplete();
   return JSON.stringify(serializeTask(task));
 })()`;
 }

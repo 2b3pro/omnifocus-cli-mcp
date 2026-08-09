@@ -42,6 +42,33 @@ describe("task script builders", () => {
       expect(script).toContain("flagged");
     });
 
+    it("should key filters off the inherited effective* properties", () => {
+      const script = buildListTasksScript({
+        flagged: true,
+        dueAfter: "2024-01-01T00:00:00Z",
+        deferAfter: "2024-01-01T00:00:00Z",
+        plannedAfter: "2024-01-01T00:00:00Z",
+      });
+      // A task inheriting its project's flag/date must surface, matching
+      // OmniFocus's own perspectives. The own-property forms silently dropped them.
+      expect(script).toContain("!t.effectiveFlagged");
+      expect(script).toContain("t.effectiveDueDate < _dueAfter");
+      expect(script).toContain("t.effectiveDeferDate < _deferAfter");
+      expect(script).toContain("t.effectivePlannedDate < _plannedAfter");
+      expect(script).not.toContain("t.dueDate < _dueAfter");
+      expect(script).not.toContain("t.deferDate < _deferAfter");
+      expect(script).not.toContain("args.flagged === true && !t.flagged");
+    });
+
+    it("should include planned date range filters", () => {
+      const script = buildListTasksScript({
+        plannedAfter: "2024-01-01T00:00:00Z",
+        plannedBefore: "2024-06-01T00:00:00Z",
+      });
+      expect(script).toContain("plannedAfter");
+      expect(script).toContain("plannedBefore");
+    });
+
     it("should include tag filter", () => {
       const script = buildListTasksScript({ tagNames: ["work", "urgent"] });
       expect(script).toContain("tagNames");
@@ -162,6 +189,36 @@ describe("task script builders", () => {
     it("should include maxDepth when specified", () => {
       const script = buildGetTaskScript({ id: "task-123", includeChildren: true, maxDepth: 3 });
       expect(script).toContain("3");
+    });
+  });
+
+  describe("plannedDate support", () => {
+    it("should set plannedDate on create", () => {
+      const script = buildCreateTaskScript({ name: "Test", plannedDate: "2026-08-15T09:00:00Z" });
+      expect(script).toContain("task.plannedDate = new Date(args.plannedDate)");
+    });
+
+    it("should set or clear plannedDate on update", () => {
+      const script = buildUpdateTaskScript({ id: "task-1", plannedDate: "2026-08-15T09:00:00Z" });
+      expect(script).toContain("task.plannedDate = args.plannedDate ? new Date(args.plannedDate) : null");
+    });
+  });
+
+  describe("buildCompleteTaskScript", () => {
+    it("should stamp the current time when no completionDate is given", () => {
+      const script = buildCompleteTaskScript("task-1");
+      expect(script).toContain("task.markComplete()");
+      expect(script).toContain("task-1");
+    });
+
+    it("should backdate the completion when completionDate is given", () => {
+      const script = buildCompleteTaskScript("task-1", "2026-08-01T12:00:00Z");
+      expect(script).toContain("task.markComplete(new Date(args.completionDate))");
+      expect(script).toContain("2026-08-01T12:00:00Z");
+    });
+
+    it("should reject an invalid completionDate", () => {
+      expect(() => buildCompleteTaskScript("task-1", "not-a-date")).toThrow(/Invalid date/);
     });
   });
 

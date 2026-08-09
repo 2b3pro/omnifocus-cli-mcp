@@ -209,3 +209,26 @@ describe("date validation in script builders", () => {
     });
   });
 });
+
+describe("plannedDate validation", () => {
+  it("should reject an invalid plannedDate on task create", () => {
+    expect(() => buildCreateTaskScript({ name: "Test", plannedDate: "nope" })).toThrow(/Invalid date for 'plannedDate'/);
+  });
+
+  it("should reject an invalid plannedDate on task update", () => {
+    expect(() => buildUpdateTaskScript({ id: "t", plannedDate: "nope" })).toThrow(/Invalid date for 'plannedDate'/);
+  });
+
+  it("should reject an invalid plannedDate on project create", () => {
+    expect(() => buildCreateProjectScript({ name: "P", plannedDate: "nope" })).toThrow(/Invalid date for 'plannedDate'/);
+  });
+
+  it("should reject an invalid plannedDate on project update", () => {
+    expect(() => buildUpdateProjectScript({ id: "p", plannedDate: "nope" })).toThrow(/Invalid date for 'plannedDate'/);
+  });
+
+  it("should accept valid plannedDates", () => {
+    expect(() => buildCreateTaskScript({ name: "Test", plannedDate: "2026-08-15" })).not.toThrow();
+    expect(() => buildCreateProjectScript({ name: "P", plannedDate: "2026-08-15T09:00:00Z" })).not.toThrow();
+  });
+});

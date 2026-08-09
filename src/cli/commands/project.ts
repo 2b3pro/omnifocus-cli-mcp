@@ -17,6 +17,8 @@ export function registerProjectCommands(program: Command, client: OmniFocusClien
     .option("--defer <date>", "Set defer date")
     .option("--clear-due", "Clear due date")
     .option("--clear-defer", "Clear defer date")
+    .option("--planned <date>", "Set planned date")
+    .option("--clear-planned", "Clear planned date")
     .option("-f, --flag", "Flag project")
     .option("--unflag", "Unflag project")
     .option("-t, --tag <string>", "Replace tags with this single tag")
@@ -50,6 +52,8 @@ export function registerProjectCommands(program: Command, client: OmniFocusClien
       if (options.defer) clientArgs["deferDate"] = parseCliDate(options.defer);
       if (options.clearDue !== undefined) clientArgs["dueDate"] = null;
       if (options.clearDefer !== undefined) clientArgs["deferDate"] = null;
+      if (options.planned) clientArgs["plannedDate"] = parseCliDate(options.planned);
+      if (options.clearPlanned !== undefined) clientArgs["plannedDate"] = null;
       if (options.flag !== undefined) clientArgs["flagged"] = true;
       if (options.unflag !== undefined) clientArgs["flagged"] = false;
       if (options.tag !== undefined) clientArgs["tag"] = options.tag;

@@ -1,5 +1,19 @@
 // ─── Serialized JSON types returned from OmniJS scripts ─────────────
 
+/**
+ * The full OmniFocus task status. Wider than the `taskStatus` filter argument,
+ * which only accepts available/remaining/completed/dropped.
+ */
+export type TaskStatus =
+  | "available"
+  | "blocked"
+  | "completed"
+  | "dropped"
+  | "next"
+  | "dueSoon"
+  | "overdue"
+  | "unknown";
+
 export interface TaskJSON {
   id: string;
   name: string;
@@ -8,14 +22,17 @@ export interface TaskJSON {
   flagged: boolean;
   completed: boolean;
   dropped: boolean;
+  status: TaskStatus;
   deferDate: string | null;
   dueDate: string | null;
   completionDate: string | null;
   droppedDate: string | null;
   added: string | null;
   modified: string | null;
+  plannedDate: string | null;
   effectiveDueDate: string | null;
   effectiveDeferDate: string | null;
+  effectivePlannedDate: string | null;
   effectiveFlagged: boolean;
   estimatedMinutes: number | null;
   containingProjectId: string | null;
@@ -46,6 +63,8 @@ export interface ProjectJSON {
   completed: boolean;
   deferDate: string | null;
   dueDate: string | null;
+  plannedDate: string | null;
+  effectivePlannedDate: string | null;
   completionDate: string | null;
   droppedDate: string | null;
   added: string | null;
@@ -139,6 +158,8 @@ export interface ListTasksArgs {
   dueBefore?: string;
   deferAfter?: string;
   deferBefore?: string;
+  plannedAfter?: string;
+  plannedBefore?: string;
   search?: string;
   taskStatus?: "available" | "remaining" | "completed" | "dropped";
   limit?: number;
@@ -151,6 +172,7 @@ export interface CreateTaskArgs {
   flagged?: boolean;
   deferDate?: string;
   dueDate?: string;
+  plannedDate?: string;
   estimatedMinutes?: number;
   completedByChildren?: boolean;
   projectId?: string;
@@ -173,6 +195,7 @@ export interface UpdateTaskArgs {
   flagged?: boolean;
   deferDate?: string | null;
   dueDate?: string | null;
+  plannedDate?: string | null;
   /** Adjust due date relative to its current value, e.g. `+3d`, `-1w`. */
   dueBy?: string;
   /** Adjust defer date relative to its current value, e.g. `+3d`, `-1w`. */
@@ -249,6 +272,7 @@ export interface CreateProjectArgs {
   completedByChildren?: boolean;
   deferDate?: string;
   dueDate?: string;
+  plannedDate?: string;
   flagged?: boolean;
   tags?: string[];
   /** Single tag convenience (CLI `--tag`); merged with `tags`. */
@@ -266,6 +290,7 @@ export interface UpdateProjectArgs {
   completedByChildren?: boolean;
   deferDate?: string | null;
   dueDate?: string | null;
+  plannedDate?: string | null;
   flagged?: boolean;
   /** Replace the project's tags entirely with this set. */
   tags?: string[];

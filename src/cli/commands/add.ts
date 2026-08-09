@@ -16,6 +16,7 @@ export function registerAddCommands(program: Command, client: OmniFocusClient) {
     .option("-n, --note <string>", "Task note")
     .option("-d, --due <date>", "Due date")
     .option("--defer <date>", "Defer date")
+    .option("--planned <date>", "Planned date (when you intend to work on it)")
     .option("-f, --flagged", "Mark as flagged")
     .option("-t, --tag <string>", "Primary tag")
     .option("--tags <string[]>", "Multiple tags (comma-sep)")
@@ -44,6 +45,7 @@ export function registerAddCommands(program: Command, client: OmniFocusClient) {
       if (options.note !== undefined) clientArgs["note"] = options.note;
       if (options.due) clientArgs["dueDate"] = parseCliDate(options.due);
       if (options.defer) clientArgs["deferDate"] = parseCliDate(options.defer);
+      if (options.planned) clientArgs["plannedDate"] = parseCliDate(options.planned);
       if (options.flagged !== undefined) clientArgs["flagged"] = options.flagged;
       if (options.tag !== undefined) clientArgs["tag"] = options.tag;
       if (options.tags !== undefined) clientArgs["tags"] = parseCsv(options.tags);
@@ -107,6 +109,7 @@ export function registerAddCommands(program: Command, client: OmniFocusClient) {
     .option("-n, --note <string>", "Project note")
     .option("-d, --due <date>", "Due date")
     .option("--defer <date>", "Defer date")
+    .option("--planned <date>", "Planned date (when you intend to work on it)")
     .option("--flagged", "Mark as flagged")
     .option("-t, --tag <string>", "Add primary tag")
     .option("--tags <string[]>", "Add multiple tags (comma-sep)")
@@ -137,6 +140,7 @@ export function registerAddCommands(program: Command, client: OmniFocusClient) {
       if (options.note !== undefined) clientArgs["note"] = options.note;
       if (options.due) clientArgs["dueDate"] = parseCliDate(options.due);
       if (options.defer) clientArgs["deferDate"] = parseCliDate(options.defer);
+      if (options.planned) clientArgs["plannedDate"] = parseCliDate(options.planned);
       if (options.flagged !== undefined) clientArgs["flagged"] = options.flagged;
       if (options.tag !== undefined) clientArgs["tag"] = options.tag;
       if (options.tags !== undefined) clientArgs["tags"] = parseCsv(options.tags);

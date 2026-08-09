@@ -55,9 +55,9 @@ of --help
 #### Common Commands
 
 - **List Inbox:** `of list inbox` (alias: `of ls i`)
-- **Add Task:** `of add "Buy milk" --due today --flagged`
+- **Add Task:** `of add "Buy milk" --due today --planned +2d --flagged`
 - **Modify Task:** `of modify <id> --tags work,urgent --due tomorrow -f` (combine any number of flags; also `--add-tag`/`--remove-tag`, `--due-by +3d`, `--clear-due`, `--project`)
-- **Complete Task:** `of complete <id>` (alias: `of done <id>`)
+- **Complete Task:** `of complete <id>` (alias: `of done <id>`; `--on -2d` backdates the completion)
 - **Tasks by Tag:** `of tag tasks NOVA` — or multiple in one call: `of tag tasks "NOVA,HITL"` (union by default; `--match all` for intersection, `--full` to include each task's tags)
 - **Search:** `of search "report"` — or filter: `of search --tag waiting --project "Q3 Launch" --flagged`
 - **Projects:** `of list projects`
@@ -216,6 +216,9 @@ This fork expands the original MCP server into a comprehensive toolkit for OmniF
 - **Multi-Tag Task Search:** `of tag tasks "a,b"` returns tasks across several tags in one call — union by default (`--match any`) or intersection (`--match all`). The same semantics are available to AI clients via `tagNames` (intersection) and `tagNamesAny` (union) on `query_omnifocus`, `list_tasks`, `get_task_count`, and `search`.
 - **Codegen Toolchain:** A metadata-driven architecture that ensures the CLI, MCP, and documentation always stay in sync, with a real drift check (`npm run codegen:check`).
 - **Agent-Optimized Docs:** Auto-generated `cli-reference-llm.md` specifically designed for token-efficient AI consumption.
+- **Planned Dates:** OmniFocus's planned date (when you intend to work on something, independent of due and defer) is readable and writable on tasks and projects — `of add --planned +2d`, `of modify --clear-planned`, and `plannedAfter`/`plannedBefore` filters for AI clients.
+- **Backdated Completions:** `of complete <id> --on -2d` (MCP: `completionDate`) logs work that finished earlier, instead of always stamping now.
+- **Inheritance-Aware Filters:** Due, defer, planned, and flagged filters key off the `effective*` properties, so a task inheriting its project's date or flag surfaces the way it does in OmniFocus's own perspectives.
 - **Status-Accurate Counts:** `get_database_summary` and `dump_database` derive due-soon/overdue from `Task.Status` and flagged from `effectiveFlagged`, so inherited and non-Available tasks are counted the way OmniFocus's own perspectives count them.
 - **Safe Live Test Harness:** Integration tests create prefix-tagged items and clean up after themselves, with a standalone orphan sweep (`npm run test:integration:cleanup`).
 
@@ -241,11 +244,11 @@ The CLI is currently the authoritative layer for advanced macOS scripting and te
 
 | Tool | Description |
 |------|-------------|
-| `list_tasks` | List tasks with filters for status, flags, tags, projects, date ranges, and text search. Tag filters: `tagNames` (all must match — intersection) and `tagNamesAny` (any must match — union) |
+| `list_tasks` | List tasks with filters for status, flags, tags, projects, date ranges (due/defer/planned), and text search. Date and flag filters match the *effective* values, so tasks inheriting a project's date or flag are included. Tag filters: `tagNames` (all must match — intersection) and `tagNamesAny` (any must match — union) |
 | `get_task` | Get task details by ID, optionally including subtask hierarchy |
-| `create_task` | Create a task in inbox or a project, with tags, dates, and recurrence |
-| `update_task` | Update task properties (name, note, dates, flags, recurrence) |
-| `complete_task` | Mark a task as completed |
+| `create_task` | Create a task in inbox or a project, with tags, dates (due/defer/planned), and recurrence |
+| `update_task` | Update task properties (name, note, due/defer/planned dates, flags, recurrence) |
+| `complete_task` | Mark a task as completed; pass `completionDate` to backdate it |
 | `uncomplete_task` | Re-open a completed task |
 | `drop_task` | Mark a task as dropped (cancelled) |
 | `delete_task` | Permanently delete a task |

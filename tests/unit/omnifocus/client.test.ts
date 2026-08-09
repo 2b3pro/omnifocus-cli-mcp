@@ -478,6 +478,28 @@ describe("OmniFocusClient", () => {
     });
   });
 
+  describe("completeTask backdating", () => {
+    it("should forward completionDate from the positional form", async () => {
+      mockRunOmniJSJson.mockResolvedValue(mockTask);
+      await client.completeTask("task-1", "2026-08-01T12:00:00Z");
+      expect(mockRunOmniJSJson.mock.calls[0][0]).toContain("2026-08-01T12:00:00Z");
+    });
+
+    it("should forward completionDate from the args-object form used by the CLI", async () => {
+      mockRunOmniJSJson.mockResolvedValue(mockTask);
+      await client.completeTask({ id: "task-1", completionDate: "2026-08-01T12:00:00Z" });
+      const script = mockRunOmniJSJson.mock.calls[0][0];
+      expect(script).toContain("2026-08-01T12:00:00Z");
+      expect(script).toContain("markComplete(new Date(args.completionDate))");
+    });
+
+    it("should stamp now when no completionDate is given", async () => {
+      mockRunOmniJSJson.mockResolvedValue(mockTask);
+      await client.completeTask("task-1");
+      expect(mockRunOmniJSJson.mock.calls[0][0]).toContain("task.markComplete()");
+    });
+  });
+
   describe("sync", () => {
     it("should run through JXA, not OmniJS", async () => {
       mockRunJXAJson.mockResolvedValue({ success: true, message: "Sync triggered" });

@@ -156,6 +156,7 @@ Add a new task.
 - `--note`, `-n` (string): Task note
 - `--due`, `-d` (date): Due date
 - `--defer` (date): Defer date
+- `--planned` (date): Planned date (when you intend to work on it)
 - `--flagged`, `-f` (boolean): Mark as flagged
 - `--tag`, `-t` (string): Primary tag
 - `--tags` (string[]): Multiple tags (comma-sep)
@@ -207,6 +208,8 @@ Update an existing task. Combine any number of flags in one call.
 - `--defer` (date): Set defer date
 - `--defer-by` (string): Adjust defer date relatively
 - `--clear-defer` (boolean): Clear the defer date
+- `--planned` (date): Set planned date
+- `--clear-planned` (boolean): Clear the planned date
 - `--flag`, `-f` (boolean): Set flagged
 - `--unflag` (boolean): Remove flag
 - `--tag`, `-t` (string): Replace tags with this single tag
@@ -255,6 +258,10 @@ Mark task(s) as complete.
 **Arguments:**
 
 - `ids...` (id[]): Task IDs
+
+**Options:**
+
+- `--on` (date): Backdate the completion to this date instead of now
 
 ### `of drop`
 
@@ -305,6 +312,7 @@ Create a new project.
 - `--note`, `-n` (string): Project note
 - `--due`, `-d` (date): Due date
 - `--defer` (date): Defer date
+- `--planned` (date): Planned date (when you intend to work on it)
 - `--flagged` (boolean): Mark as flagged
 - `--tag`, `-t` (string): Add primary tag
 - `--tags` (string[]): Add multiple tags (comma-sep)
@@ -330,6 +338,8 @@ Modify project properties.
 - `--defer` (date): Set defer date
 - `--clear-due` (boolean): Clear due date
 - `--clear-defer` (boolean): Clear defer date
+- `--planned` (date): Set planned date
+- `--clear-planned` (boolean): Clear planned date
 - `--flag`, `-f` (boolean): Flag project
 - `--unflag` (boolean): Unflag project
 - `--tag`, `-t` (string): Replace tags with this single tag

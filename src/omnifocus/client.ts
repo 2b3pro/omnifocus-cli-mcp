@@ -168,9 +168,10 @@ export class OmniFocusClient {
     return result;
   }
 
-  async completeTask(idOrArgs: string | { id: string }): Promise<TaskJSON> {
+  async completeTask(idOrArgs: string | { id: string; completionDate?: string }, completionDate?: string): Promise<TaskJSON> {
     const id = typeof idOrArgs === "string" ? idOrArgs : idOrArgs.id;
-    const result = await runOmniJSJson<TaskJSON>(buildCompleteTaskScript(id));
+    const when = typeof idOrArgs === "string" ? completionDate : (idOrArgs.completionDate ?? completionDate);
+    const result = await runOmniJSJson<TaskJSON>(buildCompleteTaskScript(id, when));
     this.invalidateAfterMutation("tasks:", "projects:", "database:");
     return result;
   }

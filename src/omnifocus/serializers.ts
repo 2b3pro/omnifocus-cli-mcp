@@ -11,6 +11,18 @@ _taskMethodMap[Task.RepetitionMethod.Fixed] = "fixed";
 _taskMethodMap[Task.RepetitionMethod.StartAfterCompletion] = "startAfterCompletion";
 _taskMethodMap[Task.RepetitionMethod.DueAfterCompletion] = "dueAfterCompletion";
 
+// Named "status" rather than "taskStatus" to mirror serializeProject and to keep
+// it distinct from the taskStatus *filter* argument, which accepts a narrower
+// set of values (available/remaining/completed/dropped).
+var _taskStatusMap = {};
+_taskStatusMap[Task.Status.Available] = "available";
+_taskStatusMap[Task.Status.Blocked] = "blocked";
+_taskStatusMap[Task.Status.Completed] = "completed";
+_taskStatusMap[Task.Status.Dropped] = "dropped";
+_taskStatusMap[Task.Status.Next] = "next";
+_taskStatusMap[Task.Status.DueSoon] = "dueSoon";
+_taskStatusMap[Task.Status.Overdue] = "overdue";
+
 function serializeTask(task) {
   var rr = null;
   if (task.repetitionRule) {
@@ -28,14 +40,17 @@ function serializeTask(task) {
     flagged: task.flagged,
     completed: task.taskStatus === Task.Status.Completed,
     dropped: task.taskStatus === Task.Status.Dropped,
+    status: _taskStatusMap[task.taskStatus] || "unknown",
     deferDate: task.deferDate ? task.deferDate.toISOString() : null,
     dueDate: task.dueDate ? task.dueDate.toISOString() : null,
     completionDate: task.completionDate ? task.completionDate.toISOString() : null,
     droppedDate: task.droppedDate ? task.droppedDate.toISOString() : null,
     added: task.added ? task.added.toISOString() : null,
     modified: task.modified ? task.modified.toISOString() : null,
+    plannedDate: task.plannedDate ? task.plannedDate.toISOString() : null,
     effectiveDueDate: task.effectiveDueDate ? task.effectiveDueDate.toISOString() : null,
     effectiveDeferDate: task.effectiveDeferDate ? task.effectiveDeferDate.toISOString() : null,
+    effectivePlannedDate: task.effectivePlannedDate ? task.effectivePlannedDate.toISOString() : null,
     effectiveFlagged: task.effectiveFlagged,
     estimatedMinutes: task.estimatedMinutes,
     containingProjectId: cp ? cp.id.primaryKey : null,
@@ -87,6 +102,8 @@ function serializeProject(project) {
     completed: project.status === Project.Status.Done,
     deferDate: project.deferDate ? project.deferDate.toISOString() : null,
     dueDate: project.dueDate ? project.dueDate.toISOString() : null,
+    plannedDate: project.plannedDate ? project.plannedDate.toISOString() : null,
+    effectivePlannedDate: project.effectivePlannedDate ? project.effectivePlannedDate.toISOString() : null,
     completionDate: project.completionDate ? project.completionDate.toISOString() : null,
     droppedDate: project.droppedDate ? project.droppedDate.toISOString() : null,
     added: project.task.added ? project.task.added.toISOString() : null,
