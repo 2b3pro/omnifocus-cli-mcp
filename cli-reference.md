@@ -249,6 +249,88 @@ Remove flag from task(s).
 
 - `ids...` (id[]): Task IDs
 
+### `of notify list`
+
+List the notifications (alarms) on a task.
+
+**Aliases:** `ls`
+
+**Arguments:**
+
+- `taskId` (id): Task ID
+
+**Examples:**
+
+```bash
+of notify list abc123
+```
+
+### `of notify add`
+
+Add a notification (alarm) to a task: at a fixed time, or relative to its due date.
+
+**Arguments:**
+
+- `taskId` (id): Task ID
+
+**Options:**
+
+- `--at` (date): Fire at a fixed time: 'YYYY-MM-DD HH:MM' (local), ISO 8601 with timezone, or +Nd/+Nw
+- `--before-due` (string): Fire this long before the due date (15m, 1h30m, 2d, 1w)
+- `--after-due` (string): Fire this long after the due date
+
+**Examples:**
+
+```bash
+of notify add abc123 --at "2026-10-05 09:00"
+```
+
+```bash
+of notify add abc123 --at +2d
+```
+
+```bash
+of notify add abc123 --before-due 1h30m
+```
+
+### `of notify modify`
+
+Change when a notification fires. Switching between a fixed time and a due-relative offset replaces the notification (new ID).
+
+**Aliases:** `mod`
+
+**Arguments:**
+
+- `taskId` (id): Task ID
+- `notificationId` (id): Notification ID (from `of notify list`)
+
+**Options:**
+
+- `--at` (date): Fire at a fixed time: 'YYYY-MM-DD HH:MM' (local), ISO 8601 with timezone, or +Nd/+Nw
+- `--before-due` (string): Fire this long before the due date (15m, 1h30m, 2d, 1w)
+- `--after-due` (string): Fire this long after the due date
+
+**Examples:**
+
+```bash
+of notify modify abc123 nOtIf1 --at "2026-10-06 08:30"
+```
+
+```bash
+of notify mod abc123 nOtIf1 --before-due 2d
+```
+
+### `of notify remove`
+
+Remove a notification from a task.
+
+**Aliases:** `rm`
+
+**Arguments:**
+
+- `taskId` (id): Task ID
+- `notificationId` (id): Notification ID (from `of notify list`)
+
 ### `of complete`
 
 Mark task(s) as complete.

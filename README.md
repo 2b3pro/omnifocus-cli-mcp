@@ -59,6 +59,7 @@ of --help
 - **Modify Task:** `of modify <id> --tags work,urgent --due tomorrow -f` (combine any number of flags; also `--add-tag`/`--remove-tag`, `--due-by +3d`, `--clear-due`, `--project`)
 - **Complete Task:** `of complete <id>` (alias: `of done <id>`; `--on -2d` backdates the completion)
 - **Tasks by Tag:** `of tag tasks NOVA` — or multiple in one call: `of tag tasks "NOVA,HITL"` (union by default; `--match all` for intersection, `--full` to include each task's tags)
+- **Notifications:** `of notify add <taskId> --at "2026-10-05 09:00"` or `--before-due 1h30m`; `of notify list <taskId>`; `of notify modify <taskId> <notificationId> --before-due 2d`; `of notify remove <taskId> <notificationId>`
 - **Search:** `of search "report"` — or filter: `of search --tag waiting --project "Q3 Launch" --flagged`
 - **Projects:** `of list projects`
 - **Today:** `of list today`
@@ -217,6 +218,7 @@ This fork expands the original MCP server into a comprehensive toolkit for OmniF
 - **Codegen Toolchain:** A metadata-driven architecture that ensures the CLI, MCP, and documentation always stay in sync, with a real drift check (`npm run codegen:check`).
 - **Agent-Optimized Docs:** Auto-generated `cli-reference-llm.md` specifically designed for token-efficient AI consumption.
 - **Planned Dates:** OmniFocus's planned date (when you intend to work on something, independent of due and defer) is readable and writable on tasks and projects — `of add --planned +2d`, `of modify --clear-planned`, and `plannedAfter`/`plannedBefore` filters for AI clients.
+- **Notifications from the CLI:** `of notify add|list|modify|remove` manages a task's alarms, either at a fixed time (`--at`) or relative to its due date (`--before-due` / `--after-due`). Modifying keeps the notification's ID unless you switch between the two kinds, which replaces it.
 - **Backdated Completions:** `of complete <id> --on -2d` (MCP: `completionDate`) logs work that finished earlier, instead of always stamping now.
 - **Inheritance-Aware Filters:** Due, defer, planned, and flagged filters key off the `effective*` properties, so a task inheriting its project's date or flag surfaces the way it does in OmniFocus's own perspectives.
 - **Status-Accurate Counts:** `get_database_summary` and `dump_database` derive due-soon/overdue from `Task.Status` and flagged from `effectiveFlagged`, so inherited and non-Available tasks are counted the way OmniFocus's own perspectives count them.

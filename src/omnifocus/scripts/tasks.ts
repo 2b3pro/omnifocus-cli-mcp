@@ -1,5 +1,5 @@
 import { serializeTaskFn, serializeTaskWithChildrenFn, serializeTaskNotificationFn, serializeProjectFn } from "../serializers.js";
-import type { ListTasksArgs, CreateTaskArgs, UpdateTaskArgs, GetTaskArgs, MoveTasksArgs, DuplicateTasksArgs, SetTaskTagsArgs, AddTaskNotificationArgs, BatchCreateTasksArgs, BatchDeleteTasksArgs, BatchCompleteTasksArgs } from "../../types/omnifocus.js";
+import type { ListTasksArgs, CreateTaskArgs, UpdateTaskArgs, GetTaskArgs, MoveTasksArgs, DuplicateTasksArgs, SetTaskTagsArgs, AddTaskNotificationArgs, UpdateTaskNotificationArgs, BatchCreateTasksArgs, BatchDeleteTasksArgs, BatchCompleteTasksArgs } from "../../types/omnifocus.js";
 import { validateDateArgs } from "../../utils/dates.js";
 
 // Shared filter logic used by both buildListTasksScript and buildGetTaskCountScript
@@ -454,19 +454,71 @@ export function buildAddTaskNotificationScript(args: AddTaskNotificationArgs): s
   return `(() => {
   var args = JSON.parse(${JSON.stringify(argsJson)});
   ${serializeTaskFn}
+  ${serializeTaskNotificationFn}
 
   var task = byId(flattenedTasks, args.taskId);
   if (!task) throw new Error("Task not found: " + args.taskId);
 
+  var notif = null;
   if (args.type === "absolute") {
     if (!args.absoluteDate) throw new Error("absoluteDate is required for absolute notifications");
-    task.addNotification(new Date(args.absoluteDate));
+    notif = task.addNotification(new Date(args.absoluteDate));
   } else if (args.type === "dueRelative") {
     if (args.relativeOffset === undefined) throw new Error("relativeOffset is required for dueRelative notifications");
-    task.addNotification(args.relativeOffset);
+    if (!task.effectiveDueDate) throw new Error("Task has no due date; a due-relative notification needs one");
+    notif = task.addNotification(args.relativeOffset);
   }
 
-  return JSON.stringify(serializeTask(task));
+  var result = serializeTask(task);
+  if (notif) result.notification = serializeTaskNotification(notif);
+  return JSON.stringify(result);
+})()`;
+}
+
+// Same-kind changes are made in place (the notification keeps its ID). OmniFocus
+// cannot change a notification's kind, so absolute <-> dueRelative is a
+// remove + add and the returned notification has a new ID (replaced: true).
+export function buildUpdateTaskNotificationScript(args: UpdateTaskNotificationArgs): string {
+  validateDateArgs(args as unknown as Record<string, unknown>, ["absoluteDate"]);
+  const argsJson = JSON.stringify(args);
+  return `(() => {
+  var args = JSON.parse(${JSON.stringify(argsJson)});
+  ${serializeTaskNotificationFn}
+
+  var task = byId(flattenedTasks, args.taskId);
+  if (!task) throw new Error("Task not found: " + args.taskId);
+
+  var notif = null;
+  for (var i = 0; i < task.notifications.length; i++) {
+    if (task.notifications[i].id.primaryKey === args.notificationId) {
+      notif = task.notifications[i];
+      break;
+    }
+  }
+  if (!notif) throw new Error("Notification not found: " + args.notificationId);
+
+  var value;
+  if (args.type === "absolute") {
+    if (!args.absoluteDate) throw new Error("absoluteDate is required for absolute notifications");
+    value = new Date(args.absoluteDate);
+  } else {
+    if (args.relativeOffset === undefined) throw new Error("relativeOffset is required for dueRelative notifications");
+    if (!task.effectiveDueDate) throw new Error("Task has no due date; a due-relative notification needs one");
+    value = args.relativeOffset;
+  }
+
+  var replaced = (_notifKindMap[notif.kind] || "unknown") !== args.type;
+  if (replaced) {
+    var added = task.addNotification(value);
+    task.removeNotification(notif);
+    notif = added;
+  } else if (args.type === "absolute") {
+    notif.absoluteFireDate = value;
+  } else {
+    notif.relativeFireOffset = value;
+  }
+
+  return JSON.stringify({ taskId: args.taskId, replaced: replaced, notification: serializeTaskNotification(notif) });
 })()`;
 }
 

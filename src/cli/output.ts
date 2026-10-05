@@ -57,6 +57,10 @@ function wrapInV1Schema(result: any, opts: GlobalOpts, outputShape: string): any
       return { ...base, tags: result.map((t: any) => transformTag(t, opts)), totalCount: result.length };
     case "perspective[]":
       return { ...base, perspectives: result, totalCount: result.length };
+    case "notification[]":
+      return { ...base, notifications: result, totalCount: result.length };
+    case "notification":
+      return { ...base, taskId: result.taskId ?? result.id, replaced: result.replaced, notification: result.notification };
     case "task":
       return { ...base, task: transformTask(result, { ...opts, full: true }) };
     case "project":
@@ -158,6 +162,8 @@ function emitQuiet(wrapped: any, outputShape: string) {
   const listKey = getListKey(outputShape);
   if (listKey && wrapped[listKey]) {
     wrapped[listKey].forEach((item: any) => console.log(item.id));
+  } else if (wrapped.notification?.id) {
+    console.log(wrapped.notification.id);
   } else if (wrapped.id) {
     console.log(wrapped.id);
   } else if (wrapped.task?.id) {
@@ -178,6 +184,7 @@ function getListKey(outputShape: string): string | null {
     case "folder[]": return "folders";
     case "tag[]": return "tags";
     case "perspective[]": return "perspectives";
+    case "notification[]": return "notifications";
     default: return null;
   }
 }
@@ -190,6 +197,18 @@ function emitHuman(wrapped: any, outputShape: string) {
   // Simple human output for now, v1 parity uses emoji and tables but this is secondary
   if (wrapped.message) {
     console.log(wrapped.message);
+    return;
+  }
+
+  if (outputShape === "notification[]") {
+    wrapped.notifications.forEach((n: any) => console.log(`🔔 ${describeNotification(n)} (${n.id})`));
+    console.log(`\nTotal: ${wrapped.totalCount}`);
+    return;
+  }
+  if (outputShape === "notification" && wrapped.notification) {
+    const n = wrapped.notification;
+    console.log(`🔔 ${describeNotification(n)} (${n.id})`);
+    if (wrapped.replaced) console.log("Kind changed: the notification was replaced and has a new ID.");
     return;
   }
 
@@ -220,4 +239,25 @@ function getIcon(outputShape: string, item: any): string {
     case "tag[]": return "🏷️";
     default: return "•";
   }
+}
+
+function describeNotification(n: any): string {
+  const fires = n.nextFireDate ? new Date(n.nextFireDate).toLocaleString() : null;
+  if (n.kind === "dueRelative" && typeof n.relativeFireOffset === "number") {
+    const offset = n.relativeFireOffset;
+    const rel = offset === 0 ? "at due" : `${formatDuration(Math.abs(offset))} ${offset < 0 ? "before" : "after"} due`;
+    return fires ? `${rel} → ${fires}` : rel;
+  }
+  const at = n.absoluteFireDate ? new Date(n.absoluteFireDate).toLocaleString() : fires;
+  return (at ?? "unscheduled") + (n.isSnoozed ? " (snoozed)" : "");
+}
+
+function formatDuration(seconds: number): string {
+  const parts: string[] = [];
+  for (const [unit, size] of [["w", 604800], ["d", 86400], ["h", 3600], ["m", 60], ["s", 1]] as const) {
+    const count = Math.floor(seconds / size);
+    if (count > 0) parts.push(`${count}${unit}`);
+    seconds -= count * size;
+  }
+  return parts.join("") || "0s";
 }

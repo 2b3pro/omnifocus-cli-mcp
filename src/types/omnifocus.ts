@@ -251,6 +251,26 @@ export interface AddTaskNotificationArgs {
   relativeOffset?: number;
 }
 
+/**
+ * When a notification fires. Exactly one field must be set. `beforeDue` /
+ * `afterDue` are CLI duration strings ("15m", "1h30m", "2d") that resolve to
+ * a signed `relativeOffset` in seconds.
+ */
+export interface NotificationTimingArgs {
+  absoluteDate?: string;
+  relativeOffset?: number;
+  beforeDue?: string;
+  afterDue?: string;
+}
+
+export interface UpdateTaskNotificationArgs {
+  taskId: string;
+  notificationId: string;
+  type: "absolute" | "dueRelative";
+  absoluteDate?: string;
+  relativeOffset?: number;
+}
+
 export interface ListProjectsArgs {
   status?: "active" | "onHold" | "done" | "dropped";
   folderId?: string;

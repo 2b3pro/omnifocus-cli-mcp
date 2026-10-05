@@ -12,6 +12,7 @@ import {
   buildDuplicateTasksScript,
   buildSetTaskTagsScript,
   buildAddTaskNotificationScript,
+  buildUpdateTaskNotificationScript,
   buildAppendTaskNoteScript,
   buildConvertTaskToProjectScript,
   buildGetTodayCompletedTasksScript,
@@ -587,6 +588,54 @@ describe("task script builders", () => {
         relativeOffset: -3600,
       });
       expect(script).not.toContain("deferRelative");
+    });
+  });
+
+  describe("buildUpdateTaskNotificationScript", () => {
+    it("should set the fire date in place for an absolute notification", () => {
+      const script = buildUpdateTaskNotificationScript({
+        taskId: "task-123",
+        notificationId: "notif-456",
+        type: "absolute",
+        absoluteDate: "2024-12-21T09:00:00Z",
+      });
+      expect(script).toContain("task-123");
+      expect(script).toContain("notif-456");
+      expect(script).toContain("notif.absoluteFireDate = value");
+      expect(script).toContain("2024-12-21T09:00:00Z");
+    });
+
+    it("should set the offset in place for a due-relative notification", () => {
+      const script = buildUpdateTaskNotificationScript({
+        taskId: "task-123",
+        notificationId: "notif-456",
+        type: "dueRelative",
+        relativeOffset: -7200,
+      });
+      expect(script).toContain("notif.relativeFireOffset = value");
+      expect(script).toContain("-7200");
+    });
+
+    it("should add the replacement before removing the old one on a kind change", () => {
+      const script = buildUpdateTaskNotificationScript({
+        taskId: "task-123",
+        notificationId: "notif-456",
+        type: "dueRelative",
+        relativeOffset: -7200,
+      });
+      expect(script.indexOf("task.addNotification(value)")).toBeGreaterThan(-1);
+      expect(script.indexOf("task.addNotification(value)")).toBeLessThan(script.indexOf("task.removeNotification(notif)"));
+    });
+
+    it("should reject an invalid date", () => {
+      expect(() =>
+        buildUpdateTaskNotificationScript({
+          taskId: "task-123",
+          notificationId: "notif-456",
+          type: "absolute",
+          absoluteDate: "not-a-date",
+        }),
+      ).toThrow("Invalid date");
     });
   });
 

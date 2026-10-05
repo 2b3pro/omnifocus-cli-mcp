@@ -12,6 +12,7 @@ export interface CommandMeta {
   stdin?: boolean;
   outputShape: "task[]" | "project[]" | "folder[]" | "tag[]" | "perspective[]"
               | "task" | "project" | "folder" | "tag" | "summary"
+              | "notification[]" | "notification"
               | "id-list" | "message" | "raw" | "forecast";
   exitCodeOverride?: string;
   mcpExpose?: boolean;
@@ -323,6 +324,83 @@ export const CLI_METADATA: Partial<Record<keyof OmniFocusClient, MethodMeta>> = 
           { name: "ids...", type: "id[]", required: true, description: "Task IDs" },
         ],
         bindArgs: { flagged: false },
+        outputShape: "message",
+      },
+    ],
+  },
+  listTaskNotifications: {
+    commands: [
+      {
+        name: "notify list",
+        aliases: ["ls"],
+        description: "List the notifications (alarms) on a task.",
+        examples: ["of notify list abc123"],
+        category: "read",
+        positional: [
+          { name: "taskId", type: "id", required: true, description: "Task ID" },
+        ],
+        outputShape: "notification[]",
+      },
+    ],
+  },
+  addTaskNotification: {
+    commands: [
+      {
+        name: "notify add",
+        description: "Add a notification (alarm) to a task: at a fixed time, or relative to its due date.",
+        examples: [
+          "of notify add abc123 --at \"2026-10-05 09:00\"",
+          "of notify add abc123 --at +2d",
+          "of notify add abc123 --before-due 1h30m",
+        ],
+        category: "write",
+        positional: [
+          { name: "taskId", type: "id", required: true, description: "Task ID" },
+        ],
+        flags: [
+          { long: "at", type: "date", parser: "parseCliDate", argKey: "absoluteDate", description: "Fire at a fixed time: 'YYYY-MM-DD HH:MM' (local), ISO 8601 with timezone, or +Nd/+Nw" },
+          { long: "before-due", type: "string", argKey: "beforeDue", description: "Fire this long before the due date (15m, 1h30m, 2d, 1w)" },
+          { long: "after-due", type: "string", argKey: "afterDue", description: "Fire this long after the due date" },
+        ],
+        outputShape: "notification",
+      },
+    ],
+  },
+  updateTaskNotification: {
+    commands: [
+      {
+        name: "notify modify",
+        aliases: ["mod"],
+        description: "Change when a notification fires. Switching between a fixed time and a due-relative offset replaces the notification (new ID).",
+        examples: [
+          "of notify modify abc123 nOtIf1 --at \"2026-10-06 08:30\"",
+          "of notify mod abc123 nOtIf1 --before-due 2d",
+        ],
+        category: "write",
+        positional: [
+          { name: "taskId", type: "id", required: true, description: "Task ID" },
+          { name: "notificationId", type: "id", required: true, description: "Notification ID (from `of notify list`)" },
+        ],
+        flags: [
+          { long: "at", type: "date", parser: "parseCliDate", argKey: "absoluteDate", description: "Fire at a fixed time: 'YYYY-MM-DD HH:MM' (local), ISO 8601 with timezone, or +Nd/+Nw" },
+          { long: "before-due", type: "string", argKey: "beforeDue", description: "Fire this long before the due date (15m, 1h30m, 2d, 1w)" },
+          { long: "after-due", type: "string", argKey: "afterDue", description: "Fire this long after the due date" },
+        ],
+        outputShape: "notification",
+      },
+    ],
+  },
+  removeTaskNotification: {
+    commands: [
+      {
+        name: "notify remove",
+        aliases: ["rm"],
+        description: "Remove a notification from a task.",
+        category: "write",
+        positional: [
+          { name: "taskId", type: "id", required: true, description: "Task ID" },
+          { name: "notificationId", type: "id", required: true, description: "Notification ID (from `of notify list`)" },
+        ],
         outputShape: "message",
       },
     ],

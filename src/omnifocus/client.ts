@@ -1,6 +1,7 @@
 import { runOmniJSJson, runJXAJson } from "./executor.js";
 import { Cache } from "./cache.js";
 import { config } from "../config.js";
+import { parseISODate, parseDurationSeconds } from "../utils/dates.js";
 import { buildDatabaseSummaryScript, buildSearchScript, buildDumpDatabaseScript, buildSaveDatabaseScript } from "./scripts/database.js";
 import { buildListFoldersScript, buildGetFolderScript, buildCreateFolderScript, buildUpdateFolderScript, buildDeleteFolderScript } from "./scripts/folders.js";
 import { buildListTagsScript, buildGetTagScript, buildCreateTagScript, buildUpdateTagScript, buildDeleteTagScript } from "./scripts/tags.js";
@@ -18,7 +19,7 @@ import {
   buildMarkReviewedScript,
   buildGetProjectTasksScript,
 } from "./scripts/projects.js";
-import { buildListTasksScript, buildGetTaskScript, buildCreateTaskScript, buildUpdateTaskScript, buildCompleteTaskScript, buildUncompleteTaskScript, buildDropTaskScript, buildDeleteTaskScript, buildMoveTasksScript, buildDuplicateTasksScript, buildSetTaskTagsScript, buildAddTaskNotificationScript, buildAppendTaskNoteScript, buildConvertTaskToProjectScript, buildGetTodayCompletedTasksScript, buildListTaskNotificationsScript, buildRemoveTaskNotificationScript, buildBatchCreateTasksScript, buildBatchDeleteTasksScript, buildBatchCompleteTasksScript, buildGetTaskCountScript } from "./scripts/tasks.js";
+import { buildListTasksScript, buildGetTaskScript, buildCreateTaskScript, buildUpdateTaskScript, buildCompleteTaskScript, buildUncompleteTaskScript, buildDropTaskScript, buildDeleteTaskScript, buildMoveTasksScript, buildDuplicateTasksScript, buildSetTaskTagsScript, buildAddTaskNotificationScript, buildUpdateTaskNotificationScript, buildAppendTaskNoteScript, buildConvertTaskToProjectScript, buildGetTodayCompletedTasksScript, buildListTaskNotificationsScript, buildRemoveTaskNotificationScript, buildBatchCreateTasksScript, buildBatchDeleteTasksScript, buildBatchCompleteTasksScript, buildGetTaskCountScript } from "./scripts/tasks.js";
 import { 
   buildHoldProjectScript, 
   buildActivateProjectScript, 
@@ -47,6 +48,7 @@ import type {
   DuplicateTasksArgs,
   SetTaskTagsArgs,
   AddTaskNotificationArgs,
+  NotificationTimingArgs,
   BatchCreateTasksArgs,
   BatchDeleteTasksArgs,
   BatchCompleteTasksArgs,
@@ -63,6 +65,44 @@ import type {
   CreateTagArgs,
   UpdateTagArgs,
 } from "../types/omnifocus.js";
+
+/**
+ * Collapses the ways a caller can say when a notification fires into the
+ * { type, absoluteDate | relativeOffset } shape the scripts take. Dates are
+ * normalised to ISO here because OmniJS's Date parser is stricter than Node's
+ * (it rejects local forms like "2026-10-05 09:00").
+ */
+function resolveNotificationTiming(
+  args: NotificationTimingArgs & { type?: "absolute" | "dueRelative" },
+): { type: "absolute" | "dueRelative"; absoluteDate?: string; relativeOffset?: number } {
+  let type = args.type;
+  if (!type) {
+    const given = (["absoluteDate", "relativeOffset", "beforeDue", "afterDue"] as const).filter(
+      (k) => args[k] !== undefined && args[k] !== null,
+    );
+    if (given.length !== 1) {
+      const err = new Error(
+        given.length === 0
+          ? "Notification timing required: give a date (--at) or an offset from the due date (--before-due / --after-due)"
+          : `Conflicting notification timing: ${given.join(", ")} — give exactly one`,
+      );
+      err.name = "UsageError";
+      throw err;
+    }
+    type = given[0] === "absoluteDate" ? "absolute" : "dueRelative";
+  }
+
+  if (type === "absolute") {
+    if (!args.absoluteDate) throw new Error("absoluteDate is required for absolute notifications");
+    const date = parseISODate(args.absoluteDate);
+    if (!date) throw new Error(`Invalid date for 'absoluteDate': ${args.absoluteDate}`);
+    return { type, absoluteDate: date.toISOString() };
+  }
+  if (args.beforeDue !== undefined) return { type, relativeOffset: -parseDurationSeconds(args.beforeDue) };
+  if (args.afterDue !== undefined) return { type, relativeOffset: parseDurationSeconds(args.afterDue) };
+  if (args.relativeOffset === undefined) throw new Error("relativeOffset is required for dueRelative notifications");
+  return { type, relativeOffset: args.relativeOffset };
+}
 
 export class OmniFocusClient {
   private cache = new Cache();
@@ -215,8 +255,24 @@ export class OmniFocusClient {
     return result;
   }
 
-  async addTaskNotification(args: AddTaskNotificationArgs): Promise<TaskJSON> {
-    const result = await runOmniJSJson<TaskJSON>(buildAddTaskNotificationScript(args));
+  /**
+   * `type` may be omitted when the timing is unambiguous — the CLI passes
+   * absoluteDate / beforeDue / afterDue and lets the kind be inferred.
+   */
+  async addTaskNotification(
+    args: AddTaskNotificationArgs | ({ taskId: string } & NotificationTimingArgs),
+  ): Promise<TaskJSON & { notification?: TaskNotificationJSON }> {
+    const scriptArgs = { taskId: args.taskId, ...resolveNotificationTiming(args) };
+    const result = await runOmniJSJson<TaskJSON & { notification?: TaskNotificationJSON }>(buildAddTaskNotificationScript(scriptArgs));
+    this.invalidateAfterMutation("tasks:");
+    return result;
+  }
+
+  async updateTaskNotification(
+    args: { taskId: string; notificationId: string } & NotificationTimingArgs,
+  ): Promise<{ taskId: string; replaced: boolean; notification: TaskNotificationJSON }> {
+    const scriptArgs = { taskId: args.taskId, notificationId: args.notificationId, ...resolveNotificationTiming(args) };
+    const result = await runOmniJSJson<{ taskId: string; replaced: boolean; notification: TaskNotificationJSON }>(buildUpdateTaskNotificationScript(scriptArgs));
     this.invalidateAfterMutation("tasks:");
     return result;
   }
@@ -243,7 +299,8 @@ export class OmniFocusClient {
     return result;
   }
 
-  async listTaskNotifications(taskId: string): Promise<TaskNotificationJSON[]> {
+  async listTaskNotifications(idOrArgs: string | { taskId: string }): Promise<TaskNotificationJSON[]> {
+    const taskId = typeof idOrArgs === "string" ? idOrArgs : idOrArgs.taskId;
     const cacheKey = `tasks:notifications:${taskId}`;
     const cached = this.cache.get<TaskNotificationJSON[]>(cacheKey);
     if (cached) return cached;
@@ -253,7 +310,13 @@ export class OmniFocusClient {
     return result;
   }
 
-  async removeTaskNotification(taskId: string, notificationId: string): Promise<{ removed: boolean; taskId: string; notificationId: string }> {
+  async removeTaskNotification(
+    taskIdOrArgs: string | { taskId: string; notificationId: string },
+    notificationIdArg?: string,
+  ): Promise<{ removed: boolean; taskId: string; notificationId: string }> {
+    const taskId = typeof taskIdOrArgs === "string" ? taskIdOrArgs : taskIdOrArgs.taskId;
+    const notificationId = typeof taskIdOrArgs === "string" ? notificationIdArg : taskIdOrArgs.notificationId;
+    if (!notificationId) throw new Error("notificationId is required");
     const result = await runOmniJSJson<{ removed: boolean; taskId: string; notificationId: string }>(buildRemoveTaskNotificationScript(taskId, notificationId));
     this.invalidateAfterMutation("tasks:");
     return result;

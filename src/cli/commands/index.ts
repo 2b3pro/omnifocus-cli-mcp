@@ -10,6 +10,7 @@ import { registerQuickCommands } from "./quick.js";
 import { registerModifyCommands } from "./modify.js";
 import { registerFlagCommands } from "./flag.js";
 import { registerUnflagCommands } from "./unflag.js";
+import { registerNotifyCommands } from "./notify.js";
 import { registerCompleteCommands } from "./complete.js";
 import { registerDropCommands } from "./drop.js";
 import { registerDeleteCommands } from "./delete.js";
@@ -33,6 +34,7 @@ export function registerAllCommands(program: Command, client: OmniFocusClient) {
   registerModifyCommands(program, client);
   registerFlagCommands(program, client);
   registerUnflagCommands(program, client);
+  registerNotifyCommands(program, client);
   registerCompleteCommands(program, client);
   registerDropCommands(program, client);
   registerDeleteCommands(program, client);

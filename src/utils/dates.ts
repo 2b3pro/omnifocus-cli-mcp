@@ -43,3 +43,23 @@ export function validateDateArgs(args: Record<string, unknown>, fields: string[]
     }
   }
 }
+
+const DURATION_UNIT_SECONDS: Record<string, number> = { w: 604800, d: 86400, h: 3600, m: 60, s: 1 };
+
+/**
+ * Parses a duration like "15m", "1h30m", "2d" or "1w" into seconds.
+ * Units: w, d, h, m (minutes), s. Throws a UsageError on anything else.
+ */
+export function parseDurationSeconds(input: string): number {
+  const value = String(input).trim().toLowerCase();
+  if (!/^(\d+(\.\d+)?[wdhms])+$/.test(value)) {
+    const err = new Error(`invalid duration: ${input}; use e.g. 15m, 1h30m, 2d, 1w`);
+    err.name = "UsageError";
+    throw err;
+  }
+  let seconds = 0;
+  for (const [, amount, unit] of value.matchAll(/(\d+(?:\.\d+)?)([wdhms])/g)) {
+    seconds += parseFloat(amount) * DURATION_UNIT_SECONDS[unit];
+  }
+  return Math.round(seconds);
+}

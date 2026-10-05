@@ -75,6 +75,23 @@ ARGS: ids...!
 ### `of unflag`
 ARGS: ids...!
 
+### `of notify list`
+ALIAS: `ls`
+ARGS: taskId!
+
+### `of notify add`
+ARGS: taskId!
+FLAGS: --at, --before-due, --after-due
+
+### `of notify modify`
+ALIAS: `mod`
+ARGS: taskId!, notificationId!
+FLAGS: --at, --before-due, --after-due
+
+### `of notify remove`
+ALIAS: `rm`
+ARGS: taskId!, notificationId!
+
 ### `of complete`
 ALIAS: `done`
 ARGS: ids...!

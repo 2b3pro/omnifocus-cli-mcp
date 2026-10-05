@@ -14,7 +14,7 @@ export const MUTATING_METHODS = new Set<string>([
   "saveDatabase", "sync",
   "createTask", "updateTask", "completeTask", "uncompleteTask",
   "dropTask", "deleteTask", "moveTasks", "duplicateTasks", "setTaskTags",
-  "addTaskNotification", "appendTaskNote", "convertTaskToProject",
+  "addTaskNotification", "updateTaskNotification", "appendTaskNote", "convertTaskToProject",
   "removeTaskNotification", "batchCreateTasks", "batchDeleteTasks",
   "batchCompleteTasks", "reorderTask", "quickEntry",
   "createProject", "updateProject", "completeProject", "dropProject",

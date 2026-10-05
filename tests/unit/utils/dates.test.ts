@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseISODate, isValidISODate, toISOString, parseDateOrNull, validateDateArgs } from "../../../src/utils/dates.js";
+import { parseISODate, isValidISODate, toISOString, parseDateOrNull, validateDateArgs, parseDurationSeconds } from "../../../src/utils/dates.js";
 
 describe("parseISODate", () => {
   it("should parse valid ISO date strings", () => {
@@ -104,5 +104,26 @@ describe("validateDateArgs", () => {
     expect(() =>
       validateDateArgs({ dueDate: "valid-date-no", otherField: "also-not-a-date" }, ["otherField"]),
     ).toThrow("Invalid date for 'otherField'");
+  });
+});
+
+describe("parseDurationSeconds", () => {
+  it("should parse single-unit durations", () => {
+    expect(parseDurationSeconds("15m")).toBe(900);
+    expect(parseDurationSeconds("1h")).toBe(3600);
+    expect(parseDurationSeconds("2d")).toBe(172800);
+    expect(parseDurationSeconds("1w")).toBe(604800);
+    expect(parseDurationSeconds("45s")).toBe(45);
+  });
+
+  it("should parse compound and fractional durations", () => {
+    expect(parseDurationSeconds("1h30m")).toBe(5400);
+    expect(parseDurationSeconds("1.5h")).toBe(5400);
+  });
+
+  it("should reject input without a unit or with junk", () => {
+    for (const bad of ["", "30", "soon", "1h x", "-1h", "h"]) {
+      expect(() => parseDurationSeconds(bad), bad).toThrow("invalid duration");
+    }
   });
 });

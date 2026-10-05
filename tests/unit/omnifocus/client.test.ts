@@ -131,6 +131,65 @@ describe("OmniFocusClient", () => {
     });
   });
 
+  describe("notification timing (CLI args)", () => {
+    const lastScript = () => mockRunOmniJSJson.mock.calls.at(-1)![0] as string;
+
+    it("should infer an absolute notification and normalise a local date to ISO", async () => {
+      mockRunOmniJSJson.mockResolvedValue(mockTask);
+      await client.addTaskNotification({ taskId: "task-abc-123", absoluteDate: "2026-10-05 09:00" });
+      expect(lastScript()).toContain(new Date("2026-10-05 09:00").toISOString());
+      expect(lastScript()).toContain("absolute");
+    });
+
+    it("should turn --before-due into a negative offset", async () => {
+      mockRunOmniJSJson.mockResolvedValue(mockTask);
+      await client.addTaskNotification({ taskId: "task-abc-123", beforeDue: "1h30m" });
+      expect(lastScript()).toContain("dueRelative");
+      expect(lastScript()).toContain("-5400");
+    });
+
+    it("should turn --after-due into a positive offset", async () => {
+      mockRunOmniJSJson.mockResolvedValue(mockTask);
+      await client.addTaskNotification({ taskId: "task-abc-123", afterDue: "2d" });
+      expect(lastScript()).toContain("172800");
+      expect(lastScript()).not.toContain("-172800");
+    });
+
+    it("should reject missing or conflicting timing without calling OmniFocus", async () => {
+      mockRunOmniJSJson.mockClear();
+      await expect(client.addTaskNotification({ taskId: "task-abc-123" })).rejects.toThrow("timing required");
+      await expect(
+        client.addTaskNotification({ taskId: "task-abc-123", absoluteDate: "2026-10-05T09:00:00Z", beforeDue: "1h" }),
+      ).rejects.toThrow("Conflicting");
+      await expect(client.addTaskNotification({ taskId: "task-abc-123", beforeDue: "soon" })).rejects.toThrow("invalid duration");
+      expect(mockRunOmniJSJson).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("updateTaskNotification", () => {
+    it("should update a notification and return it", async () => {
+      mockRunOmniJSJson.mockResolvedValue({ taskId: "task-abc-123", replaced: false, notification: mockDueRelativeNotification });
+      const result = await client.updateTaskNotification({ taskId: "task-abc-123", notificationId: "notif-2", beforeDue: "1h" });
+      expect(result.notification.id).toBe("notif-2");
+      const script = mockRunOmniJSJson.mock.calls.at(-1)![0] as string;
+      expect(script).toContain("notif-2");
+      expect(script).toContain("-3600");
+    });
+  });
+
+  describe("notification methods (CLI object args)", () => {
+    it("should accept { taskId } for list and { taskId, notificationId } for remove", async () => {
+      mockRunOmniJSJson.mockResolvedValue([mockAbsoluteNotification]);
+      expect(await client.listTaskNotifications({ taskId: "task-xyz-789" })).toHaveLength(1);
+
+      mockRunOmniJSJson.mockResolvedValue({ removed: true, taskId: "task-xyz-789", notificationId: "notif-1" });
+      await client.removeTaskNotification({ taskId: "task-xyz-789", notificationId: "notif-1" });
+      const script = mockRunOmniJSJson.mock.calls.at(-1)![0] as string;
+      expect(script).toContain("task-xyz-789");
+      expect(script).toContain("notif-1");
+    });
+  });
+
   describe("appendTaskNote", () => {
     it("should append note and return task", async () => {
       mockRunOmniJSJson.mockResolvedValue(mockTask);
