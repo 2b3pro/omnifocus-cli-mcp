@@ -28,7 +28,7 @@ program
   .version(pkg.version)
   .option("--json", "Emit JSON to stdout")
   .option("--pretty", "Pretty-print JSON output")
-  .option("--quiet, -q", "Emit only IDs on success")
+  .option("-q, --quiet", "Emit only IDs on success")
   .option("--dry-run", "Show what would happen without making changes")
   .option("--no-preflight", "Skip OmniFocus connection check")
   .option("--schema <version>", "Specify JSON schema version", "1.0");

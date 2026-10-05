@@ -69,7 +69,7 @@ of --help
 
 - `--json`: Output as raw JSON (useful for `jq`)
 - `--pretty`: Pretty-print JSON output
-- `--quiet, -q`: Output only IDs (useful for piping: `of ls i -q | xargs of complete`)
+- `-q, --quiet`: Output only IDs (useful for piping: `of ls i -q | xargs of complete`)
 - `--dry-run`: Preview changes without executing them
 
 ### Natural Dates
